@@ -197,8 +197,10 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
 
   let testOn = false;
   let testBusy = false;
-  let testErr = false;
   let lastArmAt = 0;
+  /** 连续读取失败次数：单拍失败很正常，连续失败才说明设备休眠/掉线。 */
+  let failRun = 0;
+  let calFailRun = 0;
   let testBarBox: HTMLElement | null = null;
   let testBarSig = "";
   const live = new Map<number, { mm: number; press: boolean; at: number }>();
@@ -210,7 +212,6 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
 
   let calOn = false;
   let calBusy = false;
-  let calErr = false;
   let adRanges = new Map<number, AdRange>();
   const calValues = new Map<number, number>();
   // 校准键盘模型：设备用 bit15 标记「该键校准完成」，网页就是按这个把键染色的。
@@ -687,6 +688,9 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         {},
         "行程测试",
         el("span", { class: "hint", text: "实时显示按键行程" }),
+        ...(selIds().length > MON_MAX_KEYS
+          ? [el("span", { class: "hint", text: `（最多同时测 ${MON_MAX_KEYS} 键，已取前 ${MON_MAX_KEYS} 个）` })]
+          : []),
         fps,
         drop,
         toggle,
@@ -770,10 +774,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
   // 设备对「指定键监测」一次最多接受 28 个 id（单个请求包 56 字节）。
   // 选超过 28 个时退回「监测全部」，此时由设备自己决定上报哪些键。
   const MON_MAX_KEYS = 28;
-  const monitoredIds = (): number[] => {
-    const ids = selIds();
-    return ids.length > 0 && ids.length <= MON_MAX_KEYS ? ids : [];
-  };
+  const monitoredIds = (): number[] => selIds().slice(0, MON_MAX_KEYS);
 
   async function startTest(): Promise<void> {
     if (testTimer) {
@@ -791,7 +792,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       return;
     }
     testOn = true;
-    testErr = false;
+    failRun = 0;
     live.clear();
     lastArmAt = 0;
     resetFps();
@@ -847,18 +848,24 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         ? await api.pollTravelMonitor(ids, TRAVEL_WINDOW_MS)
         : await api.readTriggerEvents(TRAVEL_WINDOW_MS);
       if (needArm) lastArmAt = now;
+      failRun = 0;
       const at = Date.now();
       for (const s of ev.travel) {
         live.set(s.id, { mm: toMm(s.distance), press: s.press, at });
       }
       schedulePaint(paintBars);
     } catch (e) {
-      if (!testErr) {
-        testErr = true;
-        toast(`行程数据读取失败，已停止监测：${e}`, true);
+      // 单拍失败是常态（无线链路偶发丢片），跳过这一拍继续；
+      // 连续失败太多才认为设备真的不在了（多半是休眠）。
+      failRun++;
+      if (failRun === 6) {
+        toast(`读数中断（${e}）—— 若持续无数据，请按一下键盘唤醒设备`, true);
       }
-      stopTest();
-      return;
+      if (failRun >= 25) {
+        toast("设备长时间无响应，已停止监测", true);
+        stopTest();
+        return;
+      }
     } finally {
       testBusy = false;
     }
@@ -1260,7 +1267,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       return;
     }
     calOn = true;
-    calErr = false;
+    calFailRun = 0;
     calValues.clear();
     calFinished.clear();
     resetFps();
@@ -1313,14 +1320,16 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
           span > 0 ? clamp(Math.max(0, ((r.max - s.ad) / span) * 100), 0, 100) : 0,
         );
       }
+      calFailRun = 0;
       schedulePaint(paintCal);
     } catch (e) {
-      if (!calErr) {
-        calErr = true;
+      // 同行程测试：单拍失败跳过，连续失败才认为设备不在了。
+      calFailRun++;
+      if (calFailRun >= 25) {
         toast(`校准进度读取失败，已停止校准：${e}`, true);
+        stopCal();
+        return;
       }
-      stopCal();
-      return;
     } finally {
       calBusy = false;
     }

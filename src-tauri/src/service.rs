@@ -384,6 +384,18 @@ impl AulaDevice {
         Ok(None)
     }
 
+    /// One transfer attempt with an explicit budget, no retries.
+    pub fn exchange_once(
+        &self,
+        packet: &[u8; PACKET_SIZE],
+        timeout: Duration,
+    ) -> Result<Option<[u8; PACKET_SIZE]>, String> {
+        if !self.framed {
+            return self.exchange_raw(packet, timeout);
+        }
+        self.exchange_framed_lockstep(packet, timeout)
+    }
+
     /// One harmless read (current onboard profile) with an explicit budget.
     ///
     /// The wireless keyboard sleeps when idle and then answers nothing; this is
