@@ -1,10 +1,15 @@
 //! 神光同步：系统音频频谱 → 键盘逐键颜色帧，外加 Windows 主题强调色同步。
 //!
 //! 分工：Rust 侧只做「WASAPI 回环采集 → FFT → 频段能量 → 键颜色帧」，**完全不碰
-//! HID**。前端按刷新率调 [`music_frame`] 取帧，再用已验证的 `set_key_colors`
-//! （`0x08/1`）下发。这样后台线程不必争用 `AppState` 的设备 Mutex，也不会重复
-//! 打开 HID 句柄。下发的节流在 `src/pages/music.ts`：链路是无线就压低帧率，
-//! 上一帧没发完就丢帧（见那里的注释）。
+//! HID**。前端按刷新率调 [`music_frame`] 取帧，再按链路选一条通道下发：
+//!   - **无线快通道**（`lighting::set_key_colors_wireless`，SDK 的
+//!     `updateRGBByWireless`）：一帧几条 20 字节报文直接写出，无分帧、无 ACK、
+//!     发射即忘 —— 无线下也能按用户设定的帧率刷；
+//!   - **标准通道**（`lighting::set_key_colors`，`0x08/1` 应用包）：有线走这条。
+//! 后端在快通道写失败时会自己退回标准通道，并把实际通道回报给前端（音乐页有
+//! 「下发通道」读数）。这样后台线程不必争用 `AppState` 的设备 Mutex，也不会重复
+//! 打开 HID 句柄。下发的节流在 `src/pages/music.ts`：标准通道在无线链路上压低
+//! 帧率，上一帧没发完就丢帧（见那里的注释）。
 //!
 //! 采集走 WASAPI **loopback**：取默认**渲染**端点的 `IAudioClient`，却用
 //! `Direction::Capture` 初始化 —— `wasapi` crate 据此加上

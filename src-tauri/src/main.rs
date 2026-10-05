@@ -32,6 +32,7 @@ fn main() {
             lighting::set_zone_effect,
             lighting::set_full_keys_rgb,
             lighting::set_key_colors,
+            lighting::set_key_colors_wireless,
             lighting::set_lightbox_colors,
             lighting::write_custom_colors,
             lighting::read_custom_color,

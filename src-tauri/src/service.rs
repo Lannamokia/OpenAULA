@@ -274,6 +274,12 @@ impl AulaDevice {
         self.dev.write(data).map(|_| ()).map_err(|e| e.to_string())
     }
 
+    /// 无线裸报文通道的出口：整条报文（report id 已包含在 `report` 里）一次写出，
+    /// 不等应答、不做任何链路层握手。见 `proto::build_raw_reports`。
+    pub fn send_raw_report(&self, report: &[u8]) -> Result<(), String> {
+        self.write_report(report)
+    }
+
     /// Take the next report queued by the reader thread, waiting at most
     /// `timeout_ms`. `Ok(None)` = nothing arrived in time; `Err` = the reader
     /// thread is gone and the queue is drained (device closed or unplugged).

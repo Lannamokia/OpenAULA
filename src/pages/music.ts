@@ -1,4 +1,4 @@
-import { api, type MusicStatus, type Rgb } from "../api";
+import { api, type ColorChannel, type KeyColor, type MusicStatus, type Rgb } from "../api";
 import { beginLoading, el, toast } from "../ui";
 
 /** 频段数范围，与 src-tauri/src/music.rs 的 MIN_BANDS / MAX_BANDS 保持一致。 */
@@ -7,13 +7,16 @@ const BAND_MAX = 24;
 /** 状态轮询间隔（频段条与读数），独立于下发的刷新率。 */
 const STATUS_MS = 250;
 /**
- * 无线链路一次下发就是一个完整往返（接近 100ms），比这更快的节拍只是白白丢帧。
- * 有线没有这个限制，跑用户设定的帧率。
+ * **标准通道**在无线链路上一次下发就是一个完整往返（接近 100ms），比这更快的节拍
+ * 只是白白丢帧。快通道不等应答，没有这个限制。
  */
 const WIRELESS_MIN_MS = 100;
 
 /** null = 还读不到（设备没连上等），按最保守的无线速率处理。 */
 type Link = "wired" | "wireless" | null;
+
+/** 用户选择的通道：自动 = 按链路（无线用快通道、有线用标准通道）。 */
+type ChannelMode = "auto" | "fast" | "app";
 
 /** `0x84/0x17` 档位码 → 名称（与后端 POLLING_RATES 一致）。 */
 const POLL_RATES: Record<number, string> = {
@@ -37,6 +40,14 @@ interface Session {
   actualFps: number;
   /** 单帧耗时（取帧 + 下发）的滑动平均，毫秒。 */
   sendMs: number;
+  /** 用户选择的通道。 */
+  channel: ChannelMode;
+  /** 后端回报的、上一帧实际走上的通道（还没发过帧时为 null）。 */
+  activeChannel: ColorChannel | null;
+  /** 上一帧快通道写失败而退回标准通道的原因。 */
+  fallback: string | null;
+  /** 快通道上一帧发出的报文条数（标准通道为 0）—— 真机验证时看得见的一手读数。 */
+  packets: number;
 }
 
 // 后端采集线程是全局的，切页不该把灯效断掉，所以运行状态放在模块级，
@@ -63,14 +74,33 @@ function linkLabel(link: Link): string {
   return link === "wired" ? "有线" : link === "wireless" ? "8K 无线" : "未知";
 }
 
+/** UI 上的通道名（不暴露协议细节）。 */
+function channelLabel(c: ColorChannel | null): string {
+  return c === "wireless" ? "无线快通道" : c === "app" ? "标准通道" : "—";
+}
+
 /**
- * 生效的发送间隔。下限由链路定（无线一帧至少 WIRELESS_MIN_MS），上限跟着**实测**
- * 的单帧耗时走：一帧要多久就隔多久再发，这样既不比链路能承受的更快，也不让发送
- * 堆在设备那边。还没测到耗时（sendMs = 0）时只按链路下限。
+ * 本帧是否走无线快通道。自动模式按链路选：8K 无线用快通道，有线继续走已验证的
+ * 标准通道（快通道在线下未验证）。
+ */
+/**
+ * ⚠ 快通道（`*ByWireless` 裸报文）在 8K 接收器上**实测会把链路打死**：发完 60 帧之后
+ * 所有命令都不再应答，需要拔插接收器才能恢复。所以默认**永远走标准通道**，
+ * auto 不再自动切换到快通道；想复现/实验只能手动选 "fast"。
+ */
+function usesFastChannel(s: Session): boolean {
+  return s.channel === "fast";
+}
+
+/**
+ * 生效的发送间隔。下限由链路定：**标准通道**在无线链路上一次下发就是一个完整往返
+ * （至少 WIRELESS_MIN_MS），快通道没有这个限制。上限跟着**实测**的单帧耗时走：
+ * 一帧要多久就隔多久再发，这样既不比链路能承受的更快，也不让发送堆在设备那边。
+ * 还没测到耗时（sendMs = 0）时只按下限。
  */
 function frameIntervalMs(s: Session): number {
   const want = Math.round(1000 / s.fps);
-  const floor = s.link === "wired" ? want : Math.max(want, WIRELESS_MIN_MS);
+  const floor = s.link === "wired" || usesFastChannel(s) ? want : Math.max(want, WIRELESS_MIN_MS);
   const paced = Math.ceil(s.sendMs * 1.15) + 5;
   return Math.max(floor, paced);
 }
@@ -98,6 +128,10 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     dropped: 0,
     actualFps: 0,
     sendMs: 0,
+    channel: "auto",
+    activeChannel: null,
+    fallback: null,
+    packets: 0,
   });
 
   const wirelessNote = el("div", { class: "empty" });
@@ -152,7 +186,31 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   const statRate = el("div", { class: "v", text: "—" });
   const statActual = el("div", { class: "v", text: "—" });
   const statDropped = el("div", { class: "v", text: "0" });
+  const statChannel = el("div", { class: "v", text: "—" });
   const sendHint = el("span", { class: "hint", text: "单帧耗时 —" });
+  const channelHint = el("span", { class: "hint", text: "" });
+
+  const channelSel = el("select", { style: "min-width:150px" });
+  for (const [v, label] of [
+    ["auto", "自动（按链路）"],
+    ["fast", "无线快通道"],
+    ["app", "标准通道"],
+  ] as [ChannelMode, string][]) {
+    const opt = el("option", { value: v, text: label });
+    if (v === st.channel) opt.selected = true;
+    channelSel.append(opt);
+  }
+  // 换通道等于换了一条下发路径：旧的单帧耗时和读数都不作数了。
+  channelSel.onchange = () => {
+    st.channel = channelSel.value as ChannelMode;
+    st.sendMs = 0;
+    st.activeChannel = null;
+    st.fallback = null;
+    st.packets = 0;
+    if (st.running) startTimers();
+    renderControls();
+    renderStatus();
+  };
 
   const errBox = el("div", { class: "empty", text: "" });
   errBox.style.display = "none";
@@ -186,14 +244,15 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     stopBtn.disabled = !st.running;
     bandIn.disabled = st.running;
     startBtn.textContent = "启动";
-    // 只在无线下提示，而且要看着当前档位说话：8K 已经调好就别再唠叨。
-    wirelessNote.hidden = !off;
+    // 只在**标准通道 + 无线链路**下提示：快通道不等应答，回报率不是它的瓶颈。
+    // 而且要看着当前档位说话：8K 已经调好就别再唠叨。
+    wirelessNote.hidden = !off || usesFastChannel(st);
     if (off) {
       const rate = POLL_RATES[st.pollRate ?? -1];
       wirelessNote.textContent =
         st.pollRate === 4
           ? "当前回报率 8KHz，无线下可以流畅使用音乐律动。"
-          : `无线连接下想流畅使用音乐律动，请把回报率切到 8000Hz（当前 ${rate ?? "未知"}）。在键盘上调：Fn 层找回报率设置，或到「系统设置」页改。`;
+          : `无线连接下想流畅使用音乐律动，请把回报率切到 8000Hz（当前 ${rate ?? "未知"}）。在键盘上调：Fn 层找回报率设置，或到「系统设置」页改；或者把上面的「下发通道」切到无线快通道。`;
     }
   }
 
@@ -209,7 +268,17 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     fpsVal.textContent = eff < st.fps ? `${st.fps} → ${eff} fps` : `${st.fps} fps`;
     statActual.textContent = st.running ? `${st.actualFps.toFixed(1)} fps` : "—";
     statDropped.textContent = String(st.dropped);
-    sendHint.textContent = st.sendMs > 0 ? `单帧耗时 ${st.sendMs.toFixed(0)} ms` : "单帧耗时 —";
+    // 读数说的是**实际**走过的通道：还没发过帧就显示接下来会走哪条。
+    statChannel.textContent = channelLabel(
+      st.activeChannel ?? (usesFastChannel(st) ? "wireless" : "app"),
+    );
+    statChannel.style.color = st.fallback ? "#e5484d" : "";
+    channelHint.textContent = st.fallback
+      ? `无线快通道写不出去，已自动改用标准通道：${st.fallback}`
+      : "";
+    sendHint.textContent =
+      (st.sendMs > 0 ? `单帧耗时 ${st.sendMs.toFixed(0)} ms` : "单帧耗时 —") +
+      (st.packets > 0 ? ` · 分包 ${st.packets}` : "");
 
     const bands = s?.bands ?? [];
     statBands.textContent = bands.length ? `${bands.length} 段` : "—";
@@ -248,6 +317,23 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     rateSent = st.sent;
   }
 
+  /**
+   * 下发一帧，返回**真正**用上的通道。走快通道时后端在写报文失败后已经自己退回
+   * 标准通道并把原因带回来，这里只负责把它记下来给读数用。
+   */
+  async function sendFrame(frame: KeyColor[]): Promise<ColorChannel> {
+    if (!usesFastChannel(st)) {
+      await api.setKeyColors(frame);
+      st.fallback = null;
+      st.packets = 0;
+      return "app";
+    }
+    const r = await api.setKeyColorsWireless(frame);
+    st.fallback = r.fallback;
+    st.packets = r.packets;
+    return r.channel;
+  }
+
   async function tickFrame(): Promise<void> {
     // 绝不排队：上一帧还在路上就丢掉这一帧，只记数。
     if (inFlight) {
@@ -258,9 +344,15 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     const t0 = performance.now();
     try {
       const frame = await api.musicFrame(st.gain);
-      await api.setKeyColors(frame);
+      const channel = await sendFrame(frame);
       const dt = performance.now() - t0;
-      st.sendMs = st.sendMs > 0 ? st.sendMs * 0.6 + dt * 0.4 : dt;
+      if (channel !== st.activeChannel) {
+        // 换了通道：旧的单帧耗时是另一条路径的，留着会把新通道也拖慢。
+        st.activeChannel = channel;
+        st.sendMs = dt;
+      } else {
+        st.sendMs = st.sendMs > 0 ? st.sendMs * 0.6 + dt * 0.4 : dt;
+      }
       st.sent++;
     } catch (e) {
       // 出错就停：不重试、不刷屏。
@@ -357,6 +449,9 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     st.dropped = 0;
     st.actualFps = 0;
     st.sendMs = 0;
+    st.activeChannel = null;
+    st.fallback = null;
+    st.packets = 0;
     rateAt = 0;
     rateSent = 0;
     renderControls();
@@ -458,8 +553,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         "div",
         { class: "row" },
         field("更新频率", el("div", { class: "slider-row" }, fpsIn, fpsVal)),
-        el("span", { class: "hint", text: "无线链路会自动降速，实际速率与单帧耗时见下方读数。" }),
+        field("下发通道", channelSel),
       ),
+      el("div", {
+        class: "hint",
+        text: "自动：无线链路走无线快通道（不等应答，能跑满帧率），有线走标准通道。快通道更快，但个别固件可能不认 —— 灯完全不亮或卡住就切回标准通道。",
+      }),
       el("div", { class: "block-label", text: "Windows 主题色" }),
       el(
         "div",
@@ -494,11 +593,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         { class: "row" },
         stat("链路", statLink),
         stat("回报率", statPoll),
+        stat("下发通道", statChannel),
         stat("生效帧率", statRate),
         stat("实际帧率", statActual),
         stat("丢弃帧数", statDropped),
       ),
-      el("div", { class: "row", style: "margin-top:8px" }, sendHint),
+      el("div", { class: "row", style: "margin-top:8px" }, sendHint, channelHint),
       errBox,
       el("div", { class: "block-label", text: "实时频段" }),
       bars,

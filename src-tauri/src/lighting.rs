@@ -7,16 +7,22 @@
 use serde::{Deserialize, Serialize};
 
 use crate::commands::{hex, with_device, AppState};
-use crate::proto::{build_app_packet, build_packets};
+use crate::proto::{build_app_packet, build_packets, build_raw_reports};
 use crate::service::AulaDevice;
 
 pub const CMD_LIGHTING_R: u8 = 0x84;
 pub const CMD_LIGHTING_W: u8 = 0x04;
 pub const CMD_CAP_LIGHTING: u8 = 0x82;
-pub const CMD_RGB_W: u8 = 0x08;
+pub const CMD_RGB_W: u8 = crate::proto::CMD_RGB;
 pub const CMD_LIGHTBOX_W: u8 = 0x29;
 pub const CMD_CUSTOM_R: u8 = 0x86;
 pub const CMD_CUSTOM_W: u8 = 0x06;
+
+/// 无线裸报文的灯光子类型（`(type<<4)|len` 的高 4 位）。取值与
+/// `0x08/<param>` 的应用包一一对应，SDK 的 `*ByWireless` 方法按同样的 type 区分。
+pub const RAW_TYPE_KEY: u8 = 0x01; // updateRGBByWireless
+pub const RAW_TYPE_FULL: u8 = 0x02; // updateFullKeysRGBByWireless
+pub const RAW_TYPE_BEADS: u8 = 0x03; // updateRGBWithLedBeadsByWireless
 
 pub const BASE_MAIN: u8 = 1;
 pub const BASE_SIDE: u8 = 6;
@@ -216,15 +222,15 @@ impl AulaDevice {
         Ok(())
     }
 
-    /// `0x08/1` per-key RGB. Data = groups of `[r, g, b, count, ...ids]`, ids
-    /// 1 byte each, total ≤ 255 bytes.
+    /// 逐键颜色 → `[r, g, b, count, ...ids]` 拼接成的数据区。两条通道共用**同一份**
+    /// 编码：裸报文 type 1 的 data 与应用包 `0x08/1` 的 data 逐字节相同。
     ///
     /// ⚠ Simplified clustering vs the SDK: we first group by *exact* color,
     /// then, only if the payload exceeds 255 bytes, greedily merge the two
     /// closest groups (euclidean distance, weighted-average color) until it
     /// fits. The SDK's full version re-clusters everything when over limit;
     /// for a 68-key board this behaves the same in practice.
-    pub fn set_key_colors(&self, entries: &[KeyColor]) -> Result<(), String> {
+    fn key_color_payload(entries: &[KeyColor]) -> Result<Vec<u8>, String> {
         let mut groups: Vec<ColorGroup> = Vec::new();
         for e in entries {
             let id = u8::try_from(e.id).map_err(|_| format!("key id {} > 255", e.id))?;
@@ -263,10 +269,33 @@ impl AulaDevice {
             data.extend_from_slice(&[g.color.r, g.color.g, g.color.b, g.ids.len() as u8]);
             data.extend_from_slice(&g.ids);
         }
+        Ok(data)
+    }
+
+    /// `0x08/1` per-key RGB，**应用包通道**。Data = groups of
+    /// `[r, g, b, count, ...ids]`, ids 1 byte each, total ≤ 255 bytes.
+    pub fn set_key_colors(&self, entries: &[KeyColor]) -> Result<(), String> {
+        let data = Self::key_color_payload(entries)?;
         for p in build_packets(CMD_RGB_W, 0x01, &data, 56) {
             self.send_command(&p)?;
         }
         Ok(())
+    }
+
+    /// 逐键颜色 —— **无线裸报文通道**（SDK `updateRGBByWireless`）。
+    ///
+    /// 数据区与 `set_key_colors` 完全相同，但不再包应用信封、不再切 0x66 帧、
+    /// 不等任何应答：整帧按 13 字节切成若干条 20 字节报文直接写出，发射即忘。
+    /// 一帧的报文数是 `ceil(len/13)`，空帧不发（与 SDK 一致）。返回报文条数。
+    pub fn set_key_colors_wireless(&self, entries: &[KeyColor]) -> Result<usize, String> {
+        let data = Self::key_color_payload(entries)?;
+        let reports = build_raw_reports(RAW_TYPE_KEY, &data);
+        for (i, r) in reports.iter().enumerate() {
+            self.send_raw_report(r).map_err(|e| {
+                format!("无线裸报文第 {}/{} 条发送失败：{e}", i + 1, reports.len())
+            })?;
+        }
+        Ok(reports.len())
     }
 
     /// `0x29/3` lightbox matrix: one RGB565 (big-endian) per cell, in matrix
@@ -434,6 +463,54 @@ pub fn set_key_colors(state: tauri::State<'_, AppState>, entries: Vec<KeyColor>)
     with_device(&state, |d| d.set_key_colors(&entries))
 }
 
+/// 一帧逐键颜色**实际**走的下发通道。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ColorChannel {
+    /// 无线裸报文：一帧若干条 20 字节报文，不等应答。
+    Wireless,
+    /// 应用包 `0x08/1`：63 字节信封（无线下再切 5 帧并逐帧等 ACK）。
+    App,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct KeyColorsResult {
+    /// 本帧真正用上的通道。裸报文写失败时会是 `App`。
+    pub channel: ColorChannel,
+    /// 裸报文通道发出的报文条数（应用包通道为 0）。
+    pub packets: usize,
+    /// 裸报文通道在链路层就失败了、于是退回应用包通道时的原因。
+    pub fallback: Option<String>,
+}
+
+/// 逐键颜色下发：**先走无线裸报文通道**，只在写报文这一步失败时退回应用包
+/// `0x08/1`（`set_key_colors`），并把实际通道回报给前端。
+///
+/// 退回的理由只有一种：`hidapi` 的写调用返回了错误。裸报文是发射即忘的通道，
+/// 设备收下却不理会它时这里**看不见**——那是固件行为，只能由用户看灯切通道
+/// （前端因此给出了「当前通道」读数和一个手动开关）。
+#[tauri::command]
+pub fn set_key_colors_wireless(
+    state: tauri::State<'_, AppState>,
+    entries: Vec<KeyColor>,
+) -> Result<KeyColorsResult, String> {
+    with_device(&state, |d| match d.set_key_colors_wireless(&entries) {
+        Ok(packets) => Ok(KeyColorsResult {
+            channel: ColorChannel::Wireless,
+            packets,
+            fallback: None,
+        }),
+        Err(reason) => {
+            d.set_key_colors(&entries)?;
+            Ok(KeyColorsResult {
+                channel: ColorChannel::App,
+                packets: 0,
+                fallback: Some(reason),
+            })
+        }
+    })
+}
+
 #[tauri::command]
 pub fn set_lightbox_colors(state: tauri::State<'_, AppState>, colors: Vec<Rgb>) -> Result<(), String> {
     with_device(&state, |d| d.set_lightbox_colors(&colors))
@@ -452,4 +529,48 @@ pub fn write_custom_colors(
 #[tauri::command]
 pub fn read_custom_color(state: tauri::State<'_, AppState>, id: u16) -> Result<Rgb, String> {
     with_device(&state, |d| d.read_custom_color(id))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::proto::build_raw_reports;
+
+    /// 逐键颜色的数据区编码（两条通道共用）与错误处理。
+    #[test]
+    fn key_color_payload_matches_the_sdk_layout() {
+        let key = |id, r, g, b| KeyColor { id, color: Rgb { r, g, b } };
+        let data = AulaDevice::key_color_payload(&[
+            key(1, 1, 2, 3),
+            key(2, 1, 2, 3),
+            key(3, 9, 8, 7),
+        ])
+        .unwrap();
+        // 同色合并成一组：[r,g,b,count,...ids]，组按首次出现的顺序排列。
+        assert_eq!(data, vec![1, 2, 3, 2, 1, 2, 9, 8, 7, 1, 3]);
+        // 同一个 id 出现两次是配置错误，宁可不发也不发一帧坏数据。
+        assert!(AulaDevice::key_color_payload(&[key(1, 0, 0, 0), key(1, 0, 0, 0)]).is_err());
+    }
+
+    /// 音乐律动的一帧（15 列各 4 键 + 8 键黑 = 16 色 / 68 键 = 132 字节）在快通道上
+    /// 是 11 条报文。这正是它比 `0x08/1` 值得的理由：一次应用包往返的钱，在这里
+    /// 够发 11 条不用等应答的报文。
+    #[test]
+    fn a_music_frame_costs_11_reports() {
+        let mut frame = Vec::new();
+        for col in 0..15u16 {
+            for i in 0..4u16 {
+                frame.push(KeyColor {
+                    id: col * 4 + i + 1,
+                    color: Rgb { r: col as u8 + 1, g: 0, b: 0 },
+                });
+            }
+        }
+        for id in 61..69u16 {
+            frame.push(KeyColor { id, color: Rgb { r: 0, g: 0, b: 0 } });
+        }
+        let data = AulaDevice::key_color_payload(&frame).unwrap();
+        assert_eq!(data.len(), 4 * 16 + 68);
+        assert_eq!(build_raw_reports(RAW_TYPE_KEY, &data).len(), 11);
+    }
 }

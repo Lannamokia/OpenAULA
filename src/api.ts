@@ -285,6 +285,18 @@ export interface AccentApplyResult {
   zones: AccentZoneResult[];
 }
 
+/** 一帧逐键颜色实际走的下发通道。 */
+export type ColorChannel = "wireless" | "app";
+
+export interface KeyColorsResult {
+  /** 本帧真正用上的通道。 */
+  channel: ColorChannel;
+  /** 无线快通道发出的报文条数（标准通道为 0）。 */
+  packets: number;
+  /** 快通道不可用而退回标准通道时的原因；正常时为 null。 */
+  fallback: string | null;
+}
+
 export const api = {
   listDevices: () => invoke<DeviceDesc[]>("list_devices"),
   openDevice: (path?: string) =>
@@ -348,6 +360,12 @@ export const api = {
     invoke<void>("set_full_keys_rgb", { color }),
   setKeyColors: (entries: KeyColor[]) =>
     invoke<void>("set_key_colors", { entries }),
+  /**
+   * 逐键颜色走**无线快通道**下发：不包应用信封、不等应答，一帧几条报文发完。
+   * 返回本帧实际用上的通道——快通道写失败时会自动退回标准通道。
+   */
+  setKeyColorsWireless: (entries: KeyColor[]) =>
+    invoke<KeyColorsResult>("set_key_colors_wireless", { entries }),
   setLightboxColors: (colors: Rgb[]) =>
     invoke<void>("set_lightbox_colors", { colors }),
   /** `0x06/0` — 把逐键颜色持久化进板载自定义灯区（effectId 19「自定义」）。 */
