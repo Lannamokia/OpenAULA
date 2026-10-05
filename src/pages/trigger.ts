@@ -855,13 +855,13 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     if (testOn) testTimer = window.setTimeout(() => void pollTravel(), 0);
   }
 
-  // --- 单键行程（0x13/0x93）---------------------------------------------------
+  // --- 触发点 / 触发深度（0x13/0x93）—— 不是"总行程"，是"按多深才算触发" ----------
 
   function renderTravel(): void {
     const ids = selIds();
     if (ids.length === 0) {
       travelCard.replaceChildren(
-        el("h2", { text: "单键行程" }),
+        el("h2", { text: "触发点" }),
         el("div", { class: "empty", text: "先在上方键位图中选择要设置的键。" }),
       );
       return;
@@ -871,14 +871,14 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     const curMm = toMm(proto);
     const maxMm = Math.max(maxTravelOf(first), MIN_TRAVEL_MM, curMm);
     const sl = mmSlider(
-      `行程（${MIN_TRAVEL_MM} .. ${maxMm.toFixed(fixed())} mm）`,
+      `触发深度（${MIN_TRAVEL_MM} .. ${maxMm.toFixed(fixed())} mm）`,
       MIN_TRAVEL_MM,
       maxMm,
       curMm,
     );
     const apply = el("button", {
       class: "btn primary",
-      text: `应用行程（${ids.length} 键）`,
+      text: `应用触发点（${ids.length} 键）`,
     });
     apply.onclick = async () => {
       const travel = toProto(Number(sl.input.value));
@@ -890,7 +890,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
           ids.map((id) => ({ id, travel })),
         );
         toast(
-          `行程 ${toMm(travel).toFixed(fixed())} mm 已写入 ${ids.length} 个键`,
+          `触发点 ${toMm(travel).toFixed(fixed())} mm 已写入 ${ids.length} 个键`,
         );
         const back = await api.readKeyTravel(layer, system, ids);
         travels = new Map(back.map((e) => [e.id, e.travel]));
@@ -906,8 +906,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       el(
         "h2",
         {},
-        "单键行程",
-        el("span", { class: "hint", text: "应用到选中键" }),
+        "触发点",
+        el("span", { class: "hint", text: "数值越大，需要按得越深才触发" }),
       ),
       el(
         "div",

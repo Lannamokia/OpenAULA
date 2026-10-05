@@ -19,7 +19,13 @@ use serde::{Deserialize, Serialize};
 use crate::proto::*;
 
 const READ_CHUNK_MS: i32 = 120;
-const FRAME_GAP: Duration = Duration::from_millis(12);
+/// Delay between the 5 fragments of one wireless transfer.
+///
+/// Measured on the 8K receiver (30 transfers per setting, `0x98/0x01`):
+/// 12ms → 30/30 ok, 109ms round trip; 1ms → 30/30, 94ms;
+/// **0ms → 30/30, 36ms**. The device wants the fragments back to back; anything
+/// in between only slows the link down.
+const FRAME_GAP: Duration = Duration::from_millis(0);
 /// Idle tick of the reader thread. `read_timeout` only waits this long when the
 /// device has nothing to send — an arriving report completes the wait
 /// immediately, so this value is *not* a latency bound; it only decides how
@@ -308,6 +314,12 @@ impl AulaDevice {
         packet: &[u8; PACKET_SIZE],
         timeout: Duration,
     ) -> Result<Option<[u8; PACKET_SIZE]>, String> {
+        // Drop anything already queued: a stale frame left over from an earlier
+        // transfer (or an unacknowledged fragment) makes the reply's fragment
+        // numbering mismatch, which throws away the real answer and burns the
+        // whole timeout. Flushing before sending costs nothing and makes every
+        // transfer start from a clean slate.
+        while self.try_read_frame()?.is_some() {}
         for f in self.next_frames(packet) {
             let mut msg = Vec::with_capacity(1 + FRAME_SIZE);
             msg.push(REPORT_ID);
@@ -371,6 +383,26 @@ impl AulaDevice {
     /// Needed by the travel monitor: its stream packets look exactly like the
     /// reply would (`0x98`/param 1), so waiting would burn a full timeout and
     /// swallow the samples the device pushes meanwhile.
+    /// Send one application packet and get it **delivered**, without caring about
+    /// the reply.
+    ///
+    /// The framed (wireless) link needs the full ACK handshake to complete a
+    /// transfer: after the host's 5 frames the device answers with 5 ACK frames,
+    /// and it only sends its own data once each of those is acknowledged. A
+    /// fire-and-forget write on that link therefore leaves the handshake half
+    /// done — the device never delivers the answer and the next command goes out
+    /// of sync, which is why the travel monitor and calibration appeared dead on
+    /// wireless. On the raw (wired) link a plain write is already complete.
+    pub fn send_app_packet(&self, packet: &[u8; PACKET_SIZE]) -> Result<(), String> {
+        if self.framed {
+            let _ = self.exchange(packet)?;
+            return Ok(());
+        }
+        self.send_packet(packet)
+    }
+
+    /// Write a packet **without waiting for a reply** (raw link only — see
+    /// `send_app_packet` for why the framed link cannot use this).
     pub fn send_packet(&self, packet: &[u8; PACKET_SIZE]) -> Result<(), String> {
         if !self.framed {
             let mut msg = Vec::with_capacity(1 + PACKET_SIZE);

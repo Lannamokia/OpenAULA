@@ -282,9 +282,10 @@ impl AulaDevice {
     }
 
     /// `0x94/0x00` — the SDK re-sends this every second while calibrating, so
-    /// it is fire-and-forget (the stream is what carries progress).
+    /// it is fire-and-forget **on the wired link** (the stream carries progress);
+    /// on wireless it must complete the ACK handshake to be delivered at all.
     pub fn start_calibration(&self) -> Result<(), String> {
-        self.send_packet(&build_app_packet(CMD_CAL, CAL_START, &[]))
+        self.send_app_packet(&build_app_packet(CMD_CAL, CAL_START, &[]))
     }
 
     pub fn stop_calibration(&self) -> Result<(), String> {
@@ -292,15 +293,14 @@ impl AulaDevice {
         Ok(())
     }
 
-    /// `0x98/0x01` — begin the travel-monitor stream for `ids`
+    /// `0x98/0x01` — ask the device for one snapshot of `ids`
     /// (empty = `0x98/0x00`, the device's own default set).
     ///
-    /// Fire-and-forget: the stream must be re-armed roughly once a second while
-    /// monitoring (the SDK does the same with a 1 s interval), so callers should
-    /// use `poll_travel_monitor`, which re-arms and drains in one call.
+    /// ⚠ This is **not** a stream: each call yields exactly one report, so the
+    /// call rate *is* the sample rate — see `poll_travel_monitor`.
     pub fn start_travel_monitor(&self, ids: &[u16]) -> Result<(), String> {
         if ids.is_empty() {
-            return self.send_packet(&build_app_packet(CMD_TRAVEL_MON, MON_START_ALL, &[]));
+            return self.send_app_packet(&build_app_packet(CMD_TRAVEL_MON, MON_START_ALL, &[]));
         }
         if ids.len() > MON_MAX_KEYS {
             return Err(format!("一次最多监测 {} 个键（收到 {}）", MON_MAX_KEYS, ids.len()));
@@ -309,15 +309,46 @@ impl AulaDevice {
         for id in ids {
             data.extend_from_slice(&id.to_be_bytes());
         }
-        self.send_packet(&build_app_packet(CMD_TRAVEL_MON, MON_START_KEYS, &data))
+        self.send_app_packet(&build_app_packet(CMD_TRAVEL_MON, MON_START_KEYS, &data))
     }
 
-    /// Re-arm the travel monitor and collect whatever arrived — one call per UI tick.
+    /// Sample every monitored key once — one call per UI tick.
+    ///
+    /// Wired: the command is fire-and-forget and the reply lands in the reader
+    /// queue, so this can run at the UI's pace (~250 Hz).
+    /// Wireless: a command only completes through the ACK handshake (~110 ms on
+    /// this receiver), so take the reply of that same exchange instead of
+    /// expecting anything from the queue.
     pub fn poll_travel_monitor(
         &self,
         ids: &[u16],
         timeout_ms: u64,
     ) -> Result<(Vec<TravelSample>, Vec<CalibrationSample>), String> {
+        if self.is_framed() {
+            let (param, data) = if ids.is_empty() || ids.len() > MON_MAX_KEYS {
+                (MON_START_ALL, Vec::new())
+            } else {
+                let mut d = Vec::with_capacity(ids.len() * 2);
+                for id in ids {
+                    d.extend_from_slice(&id.to_be_bytes());
+                }
+                (MON_START_KEYS, d)
+            };
+            let pkt = build_app_packet(CMD_TRAVEL_MON, param, &data);
+            let r = self.exchange(&pkt)?.ok_or("no reply (timeout)")?;
+            let n = (r[5] as usize).min(56);
+            let mut travel = Vec::new();
+            for c in r[6..6 + n].chunks_exact(6) {
+                let f = be16(c, 4);
+                travel.push(TravelSample {
+                    id: be16(c, 0),
+                    distance: be16(c, 2),
+                    press: f & 0x8000 != 0,
+                    ad: f & 0x7FFF,
+                });
+            }
+            return Ok((travel, Vec::new()));
+        }
         self.start_travel_monitor(ids)?;
         self.read_trigger_events(timeout_ms)
     }
