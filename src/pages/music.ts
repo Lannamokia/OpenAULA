@@ -131,7 +131,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     packets: 0,
   });
 
-  const wirelessNote = el("div", { class: "empty" });
+  const wirelessNote = el("div", { class: "warn-line" });
   wirelessNote.hidden = true;
   const startBtn = el("button", { class: "btn primary", text: "启动" });
   const stopBtn = el("button", { class: "btn danger", text: "停止" });
@@ -232,7 +232,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     errBox.style.display = msg ? "" : "none";
   }
 
-  /** 无线链路的 HID 带宽扛不住音乐律动所需的刷新率，直接禁用这一项。 */
+  /** 链路是无线接收器吗 —— 它决定下面那条告警显不显示。 */
   const wireless = (): boolean => st.link === "wireless";
 
   function renderControls(): void {
@@ -241,15 +241,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     stopBtn.disabled = !st.running;
     bandIn.disabled = st.running;
     startBtn.textContent = "启动";
-    // 只在**标准通道 + 无线链路**下提示：快通道不等应答，回报率不是它的瓶颈。
-    // 而且要看着当前档位说话：8K 已经调好就别再唠叨。
-    wirelessNote.hidden = !off || usesFastChannel(st);
+    // 无线下"逐帧推直控颜色"必然出现整块键盘的杂色/白色闪烁，实测**与帧率无关**
+    // （50~500 报文/秒每一档都发生），标准通道与无线快通道**都**会，有线不会。
+    // 所以只留这一句建议，不再提回报率之类的"调一调就好"。
+    wirelessNote.hidden = !off;
     if (off) {
-      const rate = POLL_RATES[st.pollRate ?? -1];
-      wirelessNote.textContent =
-        st.pollRate === 4
-          ? "当前回报率 8KHz，无线下可以流畅使用音乐律动。"
-          : `无线连接下想流畅使用音乐律动，请把回报率切到 8000Hz（当前 ${rate ?? "未知"}）。在键盘上调：Fn 层找回报率设置，或到「系统设置」页改；或者把上面的「下发通道」切到无线快通道。`;
+      wirelessNote.textContent = "无线连接下音乐律动会出现杂色闪烁，建议切换到有线连接使用。";
     }
   }
 
@@ -430,6 +427,18 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     const task = beginLoading("正在启动神光同步…");
     try {
       await refreshLink();
+      // 无线下推"逐键直控颜色"必然出现整块键盘的杂色/白闪，**与帧率、下发通道都无关**
+      // （有线完全正常；厂商自己的驱动也只有有线版音乐律动）。拦一道，用户坚持要用也放行。
+      const wirelessWarn =
+        "使用无线连接打开音乐律动会导致键盘出现随机周期的杂色闪烁。\n\n" +
+        "如果确实有使用这个功能的需求，请切换至有线模式进行连接。\n\n" +
+        "仍要启动吗？";
+      if (wireless() && !window.confirm(wirelessWarn)) {
+        st.running = false;
+        renderControls();
+        renderStatus();
+        return;
+      }
       await api.musicStart(Math.round(st.bands));
     } catch (e) {
       showError(`启动音频采集失败：${e}`);
