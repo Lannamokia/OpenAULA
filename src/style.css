@@ -69,11 +69,6 @@ body {
   font-style: normal;
 }
 
-.brand .tag {
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
 .nav-btn {
   appearance: none;
   border: none;

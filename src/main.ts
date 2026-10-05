@@ -78,7 +78,6 @@ async function main(): Promise<void> {
     "div",
     { class: "brand" },
     el("span", { class: "logo" }, "Open", el("em", { text: "AULA" })),
-    el("span", { class: "tag", text: "unofficial" }),
   );
   const pill = el(
     "div",
