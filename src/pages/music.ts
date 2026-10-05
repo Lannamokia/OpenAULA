@@ -100,10 +100,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     sendMs: 0,
   });
 
-  const wirelessNote = el("div", {
-    class: "empty",
-    text: "无线接收器的 HID 上行带宽有限，音乐律动可能只能跑到几帧每秒。回报率档位越高，可用带宽越大 —— 可以在键盘上把回报率调到 8K 再试。",
-  });
+  const wirelessNote = el("div", { class: "empty" });
   wirelessNote.hidden = true;
   const startBtn = el("button", { class: "btn primary", text: "启动" });
   const stopBtn = el("button", { class: "btn danger", text: "停止" });
@@ -189,7 +186,15 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     stopBtn.disabled = !st.running;
     bandIn.disabled = st.running;
     startBtn.textContent = "启动";
+    // 只在无线下提示，而且要看着当前档位说话：8K 已经调好就别再唠叨。
     wirelessNote.hidden = !off;
+    if (off) {
+      const rate = POLL_RATES[st.pollRate ?? -1];
+      wirelessNote.textContent =
+        st.pollRate === 4
+          ? "当前回报率 8KHz，无线下可以流畅使用音乐律动。"
+          : `无线连接下想流畅使用音乐律动，请把回报率切到 8000Hz（当前 ${rate ?? "未知"}）。在键盘上调：Fn 层找回报率设置，或到「系统设置」页改。`;
+    }
   }
 
   function renderStatus(): void {
