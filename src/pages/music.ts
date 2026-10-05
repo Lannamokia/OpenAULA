@@ -15,6 +15,11 @@ const WIRELESS_MIN_MS = 100;
 /** null = 还读不到（设备没连上等），按最保守的无线速率处理。 */
 type Link = "wired" | "wireless" | null;
 
+/** `0x84/0x17` 档位码 → 名称（与后端 POLLING_RATES 一致）。 */
+const POLL_RATES: Record<number, string> = {
+  0: "1KHz", 1: "500Hz", 2: "250Hz", 3: "125Hz", 4: "8KHz", 5: "4KHz", 6: "2KHz",
+};
+
 interface Session {
   /** 已成功 music_start。 */
   running: boolean;
@@ -23,6 +28,8 @@ interface Session {
   fps: number;
   status: MusicStatus | null;
   link: Link;
+  /** `0x84/0x17` 回报率档位码（影响可用上行带宽）。 */
+  pollRate: number | null;
   /** 本次启动以来成功下发的帧数与丢弃的帧数。 */
   sent: number;
   dropped: number;
@@ -86,6 +93,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     fps: 60,
     status: null,
     link: null,
+    pollRate: null,
     sent: 0,
     dropped: 0,
     actualFps: 0,
@@ -94,7 +102,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
 
   const wirelessNote = el("div", {
     class: "empty",
-    text: "无线接收器的 HID 带宽不足以承载音乐律动所需的刷新率，这一项已禁用。改用有线连接即可使用；下方的 Windows 主题色同步不受影响。",
+    text: "无线接收器的 HID 上行带宽有限，音乐律动可能只能跑到几帧每秒。回报率档位越高，可用带宽越大 —— 可以在键盘上把回报率调到 8K 再试。",
   });
   wirelessNote.hidden = true;
   const startBtn = el("button", { class: "btn primary", text: "启动" });
@@ -143,6 +151,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   const statBands = el("div", { class: "v", text: "—" });
   const statState = el("div", { class: "v", text: "未运行" });
   const statLink = el("div", { class: "v", text: "—" });
+  const statPoll = el("div", { class: "v", text: "—" });
   const statRate = el("div", { class: "v", text: "—" });
   const statActual = el("div", { class: "v", text: "—" });
   const statDropped = el("div", { class: "v", text: "0" });
@@ -176,11 +185,10 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
 
   function renderControls(): void {
     const off = wireless();
-    startBtn.disabled = st.running || off;
+    startBtn.disabled = st.running;
     stopBtn.disabled = !st.running;
-    bandIn.disabled = st.running || off;
-    if (off && !st.running) startBtn.textContent = "无线连接下不可用";
-    else startBtn.textContent = "启动";
+    bandIn.disabled = st.running;
+    startBtn.textContent = "启动";
     wirelessNote.hidden = !off;
   }
 
@@ -191,6 +199,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     statState.textContent = st.running ? (s?.running ? "采集中" : "启动中…") : "已停止";
     const eff = effectiveFps(st);
     statLink.textContent = linkLabel(st.link);
+    statPoll.textContent = POLL_RATES[st.pollRate ?? -1] ?? "—";
     statRate.textContent = `${eff} fps${eff < st.fps ? "（已限速）" : ""}`;
     fpsVal.textContent = eff < st.fps ? `${st.fps} → ${eff} fps` : `${st.fps} fps`;
     statActual.textContent = st.running ? `${st.actualFps.toFixed(1)} fps` : "—";
@@ -307,6 +316,11 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     try {
       const d = await api.deviceStatus();
       st.link = d.framed ? "wireless" : "wired";
+      try {
+        st.pollRate = (await api.deviceSettings()).polling_rate;
+      } catch {
+        st.pollRate = null;
+      }
     } catch {
       // 读不到就保持上一次的结果；为 null 时按最保守的无线速率跑。
     }
@@ -479,6 +493,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         "div",
         { class: "row" },
         stat("链路", statLink),
+        stat("回报率", statPoll),
         stat("生效帧率", statRate),
         stat("实际帧率", statActual),
         stat("丢弃帧数", statDropped),
