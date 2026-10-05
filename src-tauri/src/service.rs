@@ -26,11 +26,20 @@ const FRAMED_ATTEMPTS: usize = 3;
 const FRAMED_TIMEOUT: Duration = Duration::from_millis(1500);
 /// Delay between the 5 fragments of one wireless transfer.
 ///
-/// Measured on the 8K receiver (30 transfers per setting, `0x98/0x01`):
-/// 12ms → 30/30 ok, 109ms round trip; 1ms → 30/30, 94ms;
-/// **0ms → 30/30, 36ms**. The device wants the fragments back to back; anything
-/// in between only slows the link down.
-const FRAME_GAP: Duration = Duration::from_millis(0);
+/// This is a **sustained-load** figure, not a burst one. An early 30-transfer
+/// burst test suggested 0ms was fine (30/30, 36ms), but under continuous polling
+/// it collapses: 8/50 transfers completed, each burning the full read deadline.
+///
+/// | gap | transfers ok | median |
+/// |---|---|---|
+/// | 0ms | 8/50 | 623ms |
+/// | **1ms** | **50/50** | **87ms** |
+/// | 4ms | 50/50 | 105ms |
+/// | 12ms | 47/50 | 102ms |
+///
+/// Measured through the Rust path afterwards (8s of continuous polling, 1ms):
+/// 97% success, median 43ms, P95 48ms.
+const FRAME_GAP: Duration = Duration::from_millis(1);
 /// Idle tick of the reader thread. `read_timeout` only waits this long when the
 /// device has nothing to send — an arriving report completes the wait
 /// immediately, so this value is *not* a latency bound; it only decides how

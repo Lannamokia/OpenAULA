@@ -339,7 +339,7 @@ impl AulaDevice {
             // should cost one skipped frame, not a 4.5s stall (3 retries x 1.5s)
             // that reads as a freeze and then kills the test.
             let r = self
-                .exchange_once(&pkt, Duration::from_millis(300))?
+                .exchange_once(&pkt, Duration::from_millis(150))?
                 .ok_or_else(|| "无应答（设备可能已休眠）".to_string())?;
             let n = (r[5] as usize).min(56);
             let mut travel = Vec::new();
