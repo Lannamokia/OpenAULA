@@ -1,5 +1,5 @@
 [package]
-name = "aula-driver"
+name = "openaula"
 version = "0.1.0"
 description = "Unofficial AULA keyboard driver (HERO 68 XS), protocol ported from spiderdriver"
 authors = ["spiderdriver"]
@@ -7,11 +7,11 @@ edition = "2021"
 rust-version = "1.77"
 
 [lib]
-name = "aula_driver_lib"
+name = "openaula_lib"
 crate-type = ["lib"]
 
 [[bin]]
-name = "aula-driver"
+name = "openaula"
 path = "src/main.rs"
 
 [dependencies]

@@ -77,20 +77,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
-name = "aula-driver"
-version = "0.1.0"
-dependencies = [
- "hidapi",
- "rustfft",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "wasapi",
- "winreg",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2129,6 +2115,20 @@ name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+
+[[package]]
+name = "openaula"
+version = "0.1.0"
+dependencies = [
+ "hidapi",
+ "rustfft",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "wasapi",
+ "winreg",
+]
 
 [[package]]
 name = "option-ext"

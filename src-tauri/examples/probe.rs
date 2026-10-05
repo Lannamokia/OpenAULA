@@ -6,10 +6,10 @@
 //!
 //! Run: `cargo run --example probe` (from `src-tauri/`).
 
-use aula_driver_lib::advanced;
-use aula_driver_lib::hid::Hid;
-use aula_driver_lib::lighting::ZONES;
-use aula_driver_lib::service::{AulaDevice, KeyEntry};
+use openaula_lib::advanced;
+use openaula_lib::hid::Hid;
+use openaula_lib::lighting::ZONES;
+use openaula_lib::service::{AulaDevice, KeyEntry};
 
 fn main() -> Result<(), String> {
     let mut hid = Hid::new()?;

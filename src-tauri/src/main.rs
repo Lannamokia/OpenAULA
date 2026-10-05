@@ -3,8 +3,8 @@
 
 use std::sync::Mutex;
 
-use aula_driver_lib::commands::{self, AppState};
-use aula_driver_lib::{advanced, lighting, macros, music, settings, trigger};
+use openaula_lib::commands::{self, AppState};
+use openaula_lib::{advanced, lighting, macros, music, settings, trigger};
 
 fn main() {
     tauri::Builder::default()
@@ -86,5 +86,5 @@ fn main() {
             settings::set_side_light_sync,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running AULA driver");
+        .expect("error while running OpenAULA");
 }
