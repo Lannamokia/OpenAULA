@@ -83,13 +83,10 @@ function channelLabel(c: ColorChannel | null): string {
  * 本帧是否走无线快通道。自动模式按链路选：8K 无线用快通道，有线继续走已验证的
  * 标准通道（快通道在线下未验证）。
  */
-/**
- * ⚠ 快通道（`*ByWireless` 裸报文）在 8K 接收器上**实测会把链路打死**：发完 60 帧之后
- * 所有命令都不再应答，需要拔插接收器才能恢复。所以默认**永远走标准通道**，
- * auto 不再自动切换到快通道；想复现/实验只能手动选 "fast"。
- */
 function usesFastChannel(s: Session): boolean {
-  return s.channel === "fast";
+  if (s.channel === "fast") return true;
+  if (s.channel === "app") return false;
+  return s.link === "wireless";
 }
 
 /**
