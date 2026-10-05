@@ -48,7 +48,12 @@ impl Hid {
     }
 
     /// All AULA configuration interfaces, regardless of PID.
-    pub fn list(&self) -> Vec<DeviceDesc> {
+    ///
+    /// `hidapi` caches its device list, so `device_list()` keeps returning whatever
+    /// was seen when the context was created — plugging a keyboard in or out never
+    /// showed up. Re-enumerating has to be asked for explicitly.
+    pub fn list(&mut self) -> Vec<DeviceDesc> {
+        self.refresh();
         self.api
             .device_list()
             .filter(|d| d.vendor_id() == VID && d.usage_page() == USAGE_PAGE && d.usage() == USAGE)
@@ -57,7 +62,8 @@ impl Hid {
     }
 
     /// Open the first configuration interface matching `pid` (any PID if None).
-    pub fn open(&self, pid: Option<u16>) -> Result<(HidDevice, DeviceDesc), String> {
+    pub fn open(&mut self, pid: Option<u16>) -> Result<(HidDevice, DeviceDesc), String> {
+        self.refresh();
         let info = self
             .api
             .device_list()
@@ -85,8 +91,15 @@ impl Hid {
         self.api.open_path(&cpath).map_err(|e| e.to_string())
     }
 
+    /// Re-scan for HID devices. Errors are ignored: a failed refresh just means
+    /// the list stays as it was, which is better than refusing to enumerate.
+    fn refresh(&mut self) {
+        let _ = self.api.refresh_devices();
+    }
+
     /// Open a specific configuration interface by its enumerated path.
-    pub fn open_path(&self, path: &str) -> Result<(HidDevice, DeviceDesc), String> {
+    pub fn open_path(&mut self, path: &str) -> Result<(HidDevice, DeviceDesc), String> {
+        self.refresh();
         let info = self
             .api
             .device_list()

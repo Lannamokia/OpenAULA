@@ -39,7 +39,7 @@ pub fn list_devices(state: tauri::State<'_, AppState>) -> Result<Vec<DeviceDesc>
     if guard.is_none() {
         *guard = Some(Hid::new()?);
     }
-    Ok(guard.as_ref().unwrap().list())
+    Ok(guard.as_mut().unwrap().list())
 }
 
 #[tauri::command]
@@ -49,15 +49,15 @@ pub fn open_device(state: tauri::State<'_, AppState>, path: Option<String>) -> R
         *hid_guard = Some(Hid::new()?);
     }
     let (dev, desc) = match &path {
-        Some(p) => hid_guard.as_ref().unwrap().open_path(p)?,
-        None => hid_guard.as_ref().unwrap().open(None)?,
+        Some(p) => hid_guard.as_mut().unwrap().open_path(p)?,
+        None => hid_guard.as_mut().unwrap().open(None)?,
     };
     // Second handle for the reader thread. `hidapi` opens the interface with
     // FILE_SHARE_READ | FILE_SHARE_WRITE, so the write handle stays usable.
     // No silent fallback to polling: a reader thread that cannot read would
     // look like a device that never answers.
     let reader = hid_guard
-        .as_ref()
+        .as_mut()
         .unwrap()
         .open_raw(&desc.path)
         .map_err(|e| format!("无法打开读取句柄（{}）：{e}", desc.path))?;

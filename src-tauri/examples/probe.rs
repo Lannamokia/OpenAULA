@@ -12,7 +12,7 @@ use aula_driver_lib::lighting::ZONES;
 use aula_driver_lib::service::{AulaDevice, KeyEntry};
 
 fn main() -> Result<(), String> {
-    let hid = Hid::new()?;
+    let mut hid = Hid::new()?;
     let devs = hid.list();
     println!("configuration interfaces found: {}", devs.len());
     for d in &devs {
