@@ -21,3 +21,10 @@ Thumbs.db
 
 # Inno Setup 输出（安装包为构建产物）
 installer-out/
+
+# Python（tools/ 里的布局生成脚本）
+__pycache__/
+*.pyc
+
+# Playwright CLI 会话产物（无头验证界面时会生成）
+.playwright-cli/
