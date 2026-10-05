@@ -97,12 +97,12 @@ impl AulaDevice {
     }
 
     fn write_u8(&self, param: u8, v: u8) -> Result<(), String> {
-        self.exchange(&build_app_packet(CMD_DEV_W, param, &[v]))?;
+        self.send_command(&build_app_packet(CMD_DEV_W, param, &[v]))?;
         Ok(())
     }
 
     fn write_be16(&self, param: u8, v: u16) -> Result<(), String> {
-        self.exchange(&build_app_packet(CMD_DEV_W, param, &v.to_be_bytes()))?;
+        self.send_command(&build_app_packet(CMD_DEV_W, param, &v.to_be_bytes()))?;
         Ok(())
     }
 

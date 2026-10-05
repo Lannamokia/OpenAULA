@@ -250,7 +250,7 @@ impl AulaDevice {
             ));
         }
         for p in build_packets(CMD_MACRO_W, 0x00, &region, MACRO_PER_PACKET) {
-            self.exchange(&p)?;
+            self.send_command(&p)?;
         }
         Ok(region.len())
     }

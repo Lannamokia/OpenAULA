@@ -40,6 +40,17 @@ const FRAMED_TIMEOUT: Duration = Duration::from_millis(1500);
 /// Measured through the Rust path afterwards (8s of continuous polling, 1ms):
 /// 97% success, median 43ms, P95 48ms.
 const FRAME_GAP: Duration = Duration::from_millis(1);
+/// Upper bound on how long a **write** waits for the framed link's per-frame
+/// ACKs (see `send_command`).
+///
+/// A healthy wireless round trip is ~34ms (same measurement as `FRAME_GAP`), so
+/// this covers the device's 5 fragment ACKs with room to spare. It is a ceiling,
+/// not a cost: the loop leaves as soon as all five have been acknowledged, which
+/// is what keeps a full-frame RGB write at tens of milliseconds instead of the
+/// 4.5s (3 attempts × 1.5s) a reply-waiting write used to burn.
+const COMMAND_ACK_WINDOW: Duration = Duration::from_millis(80);
+/// Read slice inside the ACK window.
+const ACK_POLL_MS: i32 = 10;
 /// Idle tick of the reader thread. `read_timeout` only waits this long when the
 /// device has nothing to send — an arriving report completes the wait
 /// immediately, so this value is *not* a latency bound; it only decides how
@@ -441,8 +452,60 @@ impl AulaDevice {
         self.send_packet(packet)
     }
 
-    /// Write a packet **without waiting for a reply** (raw link only — see
-    /// `send_app_packet` for why the framed link cannot use this).
+    /// Send a command whose reply we do not want — every plain **write** goes
+    /// through here.
+    ///
+    /// A write gets at most a link-layer ACK; it never gets application data
+    /// back. Waiting for a reply that will not come is what made writes cost a
+    /// full timeout: 1s each on the wired link (`exchange_raw`) and 4.5s on the
+    /// framed wireless one (3 attempts × 1.5s). `lighting::set_key_colors` is 1..3
+    /// packets per frame, which is exactly where the measured 13.8s/frame came
+    /// from.
+    ///
+    /// Wired: one whole packet, done (delegates to `send_packet`).
+    /// Framed: the 5 fragments still have to go out with `FRAME_GAP` between
+    /// them, and the device only completes the transfer once the host has
+    /// acknowledged the frames it answers with — so a short window ACKs whatever
+    /// arrives and returns. It deliberately does **not** wait for a reassembled
+    /// application packet; `exchange_framed_lockstep` would sit out its whole
+    /// deadline chasing one.
+    pub fn send_command(&self, packet: &[u8; PACKET_SIZE]) -> Result<(), String> {
+        if !self.framed {
+            return self.send_packet(packet);
+        }
+        // Drop stale frames first. They would otherwise be counted as this
+        // transfer's ACKs and end the window before the real ones arrive.
+        while self.try_read_frame()?.is_some() {}
+        self.send_packet(packet)?; // the 5 fragments, FRAME_GAP between them
+        let deadline = Instant::now() + COMMAND_ACK_WINDOW;
+        let mut acked = 0usize;
+        while acked < 5 && Instant::now() < deadline {
+            let Some(buf) = self.read_frame(ACK_POLL_MS)? else {
+                continue;
+            };
+            if buf.first() != Some(&MAGIC) {
+                continue;
+            }
+            // The device stops sending unless each of its frames is ACKed.
+            let ack = ack_frame(&buf);
+            let mut msg = Vec::with_capacity(1 + FRAME_SIZE);
+            msg.push(REPORT_ID);
+            msg.extend_from_slice(&ack);
+            self.write_report(&msg)?;
+            // A length-0 frame is the device's ACK for one of our fragments;
+            // anything else is a data reply we have no use for.
+            if let Some(r) = parse_frame(&buf) {
+                if r.ok && r.len == 0 {
+                    acked += 1;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Write a packet **without waiting for a reply** (raw link only by itself —
+    /// see `send_app_packet` for why the framed link cannot leave it at that, and
+    /// `send_command` for the framed write that adds the ACK window on top).
     pub fn send_packet(&self, packet: &[u8; PACKET_SIZE]) -> Result<(), String> {
         if !self.framed {
             let mut msg = Vec::with_capacity(1 + PACKET_SIZE);
@@ -588,7 +651,7 @@ impl AulaDevice {
             data.extend_from_slice(&e.keycode.to_be_bytes());
         }
         for chunk in build_packets(CMD_KEYMAP_W, els(layer, system), &data, 54) {
-            self.exchange(&chunk)?;
+            self.send_command(&chunk)?;
         }
         Ok(())
     }
@@ -597,7 +660,7 @@ impl AulaDevice {
     /// DATA byte, not in param (see commands.md §3).
     pub fn switch_profile(&self, n: u8) -> Result<(), String> {
         let pkt = build_app_packet(CMD_PROFILE_W, 0x00, &[n]);
-        self.exchange(&pkt)?;
+        self.send_command(&pkt)?;
         Ok(())
     }
 
@@ -621,7 +684,7 @@ impl AulaDevice {
         let mut data = Vec::with_capacity(1 + b.len());
         data.push(b.len() as u8);
         data.extend_from_slice(b);
-        self.exchange(&build_app_packet(0x1A, profile, &data))?;
+        self.send_command(&build_app_packet(0x1A, profile, &data))?;
         Ok(())
     }
 
@@ -647,7 +710,7 @@ impl AulaDevice {
     /// beyond the written length (see commands.md §5).
     pub fn write_macro_region(&self, region: &[u8]) -> Result<(), String> {
         for p in build_packets(CMD_MACRO_W, 0, region, 56) {
-            self.exchange(&p)?;
+            self.send_command(&p)?;
         }
         Ok(())
     }
@@ -664,7 +727,7 @@ impl AulaDevice {
         let mut pkts = build_packets(CMD_ADV_W, els(layer, system), data, 56);
         inject_advanced_type(&mut pkts, key_type);
         for p in &pkts {
-            self.exchange(p)?;
+            self.send_command(p)?;
         }
         Ok(())
     }
@@ -672,7 +735,7 @@ impl AulaDevice {
     /// Delete an advanced key by id (`0x12`, data = BE16(id)).
     pub fn delete_advanced_key(&self, layer: u8, system: u8, id: u16) -> Result<(), String> {
         let pkt = build_app_packet(CMD_ADV_W, els(layer, system), &id.to_be_bytes());
-        self.exchange(&pkt)?;
+        self.send_command(&pkt)?;
         Ok(())
     }
 

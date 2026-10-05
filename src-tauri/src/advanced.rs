@@ -281,7 +281,7 @@ impl AulaDevice {
         let mut pkts = build_packets(CMD_ADV_W, els(layer, system), &data, 56);
         inject_advanced_type(&mut pkts, k.kind);
         for p in &pkts {
-            self.exchange(p)?;
+            self.send_command(p)?;
         }
         Ok(())
     }
@@ -291,7 +291,7 @@ impl AulaDevice {
         let mut pkts = build_packets(CMD_ADV_W, els(layer, system), &id.to_be_bytes(), 56);
         inject_advanced_type(&mut pkts, KIND_NONE);
         for p in &pkts {
-            self.exchange(p)?;
+            self.send_command(p)?;
         }
         Ok(())
     }

@@ -155,7 +155,7 @@ fn read_records(
 
 fn write_records(d: &AulaDevice, cmd: u8, param: u8, data: &[u8], per_packet: usize) -> Result<(), String> {
     for p in build_packets(cmd, param, data, per_packet) {
-        d.exchange(&p)?;
+        d.send_command(&p)?;
     }
     Ok(())
 }
@@ -289,7 +289,7 @@ impl AulaDevice {
     }
 
     pub fn stop_calibration(&self) -> Result<(), String> {
-        self.exchange(&build_app_packet(CMD_CAL, CAL_STOP, &[]))?;
+        self.send_command(&build_app_packet(CMD_CAL, CAL_STOP, &[]))?;
         Ok(())
     }
 
@@ -359,7 +359,7 @@ impl AulaDevice {
     }
 
     pub fn stop_travel_monitor(&self) -> Result<(), String> {
-        self.exchange(&build_app_packet(CMD_TRAVEL_MON, MON_STOP, &[]))?;
+        self.send_command(&build_app_packet(CMD_TRAVEL_MON, MON_STOP, &[]))?;
         Ok(())
     }
 

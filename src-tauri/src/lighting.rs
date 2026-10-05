@@ -180,7 +180,7 @@ impl AulaDevice {
         if base == BASE_MAIN && direction_supported {
             data.push(e.direction.unwrap_or(0));
         }
-        self.exchange(&build_app_packet(CMD_LIGHTING_W, base, &data))?;
+        self.send_command(&build_app_packet(CMD_LIGHTING_W, base, &data))?;
         Ok(())
     }
 
@@ -212,7 +212,7 @@ impl AulaDevice {
 
     /// `0x08/2` set every key to one color.
     pub fn set_full_keys_rgb(&self, c: &Rgb) -> Result<(), String> {
-        self.exchange(&build_app_packet(CMD_RGB_W, 0x02, &[c.r, c.g, c.b]))?;
+        self.send_command(&build_app_packet(CMD_RGB_W, 0x02, &[c.r, c.g, c.b]))?;
         Ok(())
     }
 
@@ -264,7 +264,7 @@ impl AulaDevice {
             data.extend_from_slice(&g.ids);
         }
         for p in build_packets(CMD_RGB_W, 0x01, &data, 56) {
-            self.exchange(&p)?;
+            self.send_command(&p)?;
         }
         Ok(())
     }
@@ -280,7 +280,7 @@ impl AulaDevice {
             data.extend_from_slice(&rgb565_be(c));
         }
         for p in build_packets(CMD_LIGHTBOX_W, 0x03, &data, 56) {
-            self.exchange(&p)?;
+            self.send_command(&p)?;
         }
         Ok(())
     }
@@ -294,7 +294,7 @@ impl AulaDevice {
             data.extend_from_slice(&[e.color.r, e.color.g, e.color.b]);
         }
         for p in build_packets(CMD_CUSTOM_W, 0x00, &data, 55) {
-            self.exchange(&p)?;
+            self.send_command(&p)?;
         }
         Ok(())
     }
