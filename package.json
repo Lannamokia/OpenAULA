@@ -1,7 +1,7 @@
 {
   "name": "openaula",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Unofficial driver for AULA HERO 68 XS keyboards (Tauri v2 + Rust + Vite/TS). Protocol ported from the spiderdriver reverse-engineering project.",
   "scripts": {

@@ -14,7 +14,7 @@
 ; 1803+ and Windows 11 ship it, so it is not bundled here.
 
 #define AppName "OpenAULA"
-#define AppVersion "0.1.0"
+#define AppVersion "1.0.0"
 #define AppExe "openaula.exe"
 #define SourceExe "..\src-tauri\target\release\openaula.exe"
 
