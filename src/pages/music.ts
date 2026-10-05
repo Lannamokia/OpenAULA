@@ -1,4 +1,4 @@
-import { api, type MusicStatus } from "../api";
+import { api, type MusicStatus, type Rgb } from "../api";
 import { beginLoading, el, toast } from "../ui";
 
 /** 频段数范围，与 src-tauri/src/music.rs 的 MIN_BANDS / MAX_BANDS 保持一致。 */
@@ -6,6 +6,14 @@ const BAND_MIN = 4;
 const BAND_MAX = 24;
 /** 状态轮询间隔（频段条与读数），独立于下发的刷新率。 */
 const STATUS_MS = 250;
+/**
+ * 无线链路一次下发就是一个完整往返（接近 100ms），比这更快的节拍只是白白丢帧。
+ * 有线没有这个限制，跑用户设定的帧率。
+ */
+const WIRELESS_MIN_MS = 100;
+
+/** null = 还读不到（设备没连上等），按最保守的无线速率处理。 */
+type Link = "wired" | "wireless" | null;
 
 interface Session {
   /** 已成功 music_start。 */
@@ -14,6 +22,14 @@ interface Session {
   gain: number;
   fps: number;
   status: MusicStatus | null;
+  link: Link;
+  /** 本次启动以来成功下发的帧数与丢弃的帧数。 */
+  sent: number;
+  dropped: number;
+  /** 实测下发帧率（每 STATUS_MS 采一次样，滑动平均）。 */
+  actualFps: number;
+  /** 单帧耗时（取帧 + 下发）的滑动平均，毫秒。 */
+  sendMs: number;
 }
 
 // 后端采集线程是全局的，切页不该把灯效断掉，所以运行状态放在模块级，
@@ -21,20 +37,44 @@ interface Session {
 let session: Session | null = null;
 let frameTimer = 0;
 let statusTimer = 0;
+/** 当前 frameTimer 的间隔，用来判断是否要按新的实测节奏重挂定时器。 */
+let frameInterval = 0;
 let inFlight = false;
+/** 上一次帧率采样的时刻与当时的成功帧数。 */
+let rateAt = 0;
+let rateSent = 0;
 
 function clearTimers(): void {
   if (frameTimer) window.clearInterval(frameTimer);
   if (statusTimer) window.clearInterval(statusTimer);
   frameTimer = 0;
   statusTimer = 0;
+  frameInterval = 0;
 }
 
-/** 与 Rust 侧一致的能量→色相映射（低=暗蓝、中=青绿、高=红）。 */
-function barColor(v: number): string {
-  const t = Math.max(0, Math.min(1, v));
-  const hue = t < 0.5 ? 240 + (165 - 240) * (t * 2) : 165 - 165 * ((t - 0.5) * 2);
-  return `hsl(${hue.toFixed(0)} 100% ${(12 + 48 * t).toFixed(0)}%)`;
+function linkLabel(link: Link): string {
+  return link === "wired" ? "有线" : link === "wireless" ? "8K 无线" : "未知";
+}
+
+/**
+ * 生效的发送间隔。下限由链路定（无线一帧至少 WIRELESS_MIN_MS），上限跟着**实测**
+ * 的单帧耗时走：一帧要多久就隔多久再发，这样既不比链路能承受的更快，也不让发送
+ * 堆在设备那边。还没测到耗时（sendMs = 0）时只按链路下限。
+ */
+function frameIntervalMs(s: Session): number {
+  const want = Math.round(1000 / s.fps);
+  const floor = s.link === "wired" ? want : Math.max(want, WIRELESS_MIN_MS);
+  const paced = Math.ceil(s.sendMs * 1.15) + 5;
+  return Math.max(floor, paced);
+}
+
+function effectiveFps(s: Session): number {
+  return Math.round(1000 / frameIntervalMs(s));
+}
+
+/** 频段条的色相：与键盘上的柱状频谱同一套（低频偏红 → 高频偏紫）。 */
+function bandHue(i: number, n: number): number {
+  return n <= 1 ? 200 : 8 + (288 * i) / (n - 1);
 }
 
 export async function renderMusic(page: HTMLElement): Promise<void> {
@@ -45,6 +85,11 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     gain: 1,
     fps: 60,
     status: null,
+    link: null,
+    sent: 0,
+    dropped: 0,
+    actualFps: 0,
+    sendMs: 0,
   });
 
   const startBtn = el("button", { class: "btn primary", text: "启动" });
@@ -69,7 +114,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   const gainVal = el("span", { class: "mono", text: `${st.gain.toFixed(1)}×` });
   const fpsIn = el("input", {
     type: "range",
-    // 键盘本身是 8K 回报率，帧率上限给到 120；默认 60。
+    // 键盘本身是 8K 回报率，帧率上限给到 120；默认 60。（无线另有限速，见读数）
     min: "10",
     max: "120",
     step: "1",
@@ -77,11 +122,26 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   });
   const fpsVal = el("span", { class: "mono", text: `${st.fps} fps` });
   const accentVal = el("span", { class: "mono", text: "—" });
+  const accentSwatch = el("span");
+  Object.assign(accentSwatch.style, {
+    display: "inline-block",
+    width: "14px",
+    height: "14px",
+    borderRadius: "3px",
+    border: "1px solid rgba(127,127,127,.45)",
+    verticalAlign: "-2px",
+    marginRight: "6px",
+  });
 
   const statFrames = el("div", { class: "v", text: "0" });
   const statPeak = el("div", { class: "v", text: "0.00" });
   const statBands = el("div", { class: "v", text: "—" });
   const statState = el("div", { class: "v", text: "未运行" });
+  const statLink = el("div", { class: "v", text: "—" });
+  const statRate = el("div", { class: "v", text: "—" });
+  const statActual = el("div", { class: "v", text: "—" });
+  const statDropped = el("div", { class: "v", text: "0" });
+  const sendHint = el("span", { class: "hint", text: "单帧耗时 —" });
 
   const errBox = el("div", { class: "empty", text: "" });
   errBox.style.display = "none";
@@ -118,6 +178,14 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     statFrames.textContent = String(s?.frames ?? 0);
     statPeak.textContent = (s?.peak ?? 0).toFixed(2);
     statState.textContent = st.running ? (s?.running ? "采集中" : "启动中…") : "已停止";
+    const eff = effectiveFps(st);
+    statLink.textContent = linkLabel(st.link);
+    statRate.textContent = `${eff} fps${eff < st.fps ? "（已限速）" : ""}`;
+    fpsVal.textContent = eff < st.fps ? `${st.fps} → ${eff} fps` : `${st.fps} fps`;
+    statActual.textContent = st.running ? `${st.actualFps.toFixed(1)} fps` : "—";
+    statDropped.textContent = String(st.dropped);
+    sendHint.textContent = st.sendMs > 0 ? `单帧耗时 ${st.sendMs.toFixed(0)} ms` : "单帧耗时 —";
+
     const bands = s?.bands ?? [];
     statBands.textContent = bands.length ? `${bands.length} 段` : "—";
     bars.replaceChildren();
@@ -127,23 +195,50 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       );
       return;
     }
-    for (const v of bands) {
+    // 预览用的柱高与亮度都乘增益，跟键盘上真正推出去的那一帧对得上。
+    for (const [i, v] of bands.entries()) {
+      const t = Math.max(0, Math.min(1, v * st.gain));
       const b = el("div");
       b.style.flex = "1";
-      b.style.height = `${Math.max(2, Math.round(v * 100))}%`;
-      b.style.background = barColor(v);
+      b.style.height = `${Math.max(2, Math.round(t * 100))}%`;
+      b.style.background = `hsl(${bandHue(i, bands.length).toFixed(0)} 95% ${(16 + 46 * t).toFixed(0)}%)`;
       b.style.borderRadius = "2px";
       bars.append(b);
     }
   }
 
+  /** 实测帧率：窗口内的成功帧数；窗口内没发出去就衰减到 0。 */
+  function sampleRate(): void {
+    const now = performance.now();
+    if (rateAt === 0) {
+      rateAt = now;
+      rateSent = st.sent;
+      return;
+    }
+    const dt = now - rateAt;
+    if (dt < STATUS_MS / 2) return;
+    const inst = ((st.sent - rateSent) * 1000) / dt;
+    st.actualFps = st.actualFps * 0.5 + inst * 0.5;
+    rateAt = now;
+    rateSent = st.sent;
+  }
+
   async function tickFrame(): Promise<void> {
-    if (inFlight) return;
+    // 绝不排队：上一帧还在路上就丢掉这一帧，只记数。
+    if (inFlight) {
+      st.dropped++;
+      return;
+    }
     inFlight = true;
+    const t0 = performance.now();
     try {
       const frame = await api.musicFrame(st.gain);
       await api.setKeyColors(frame);
+      const dt = performance.now() - t0;
+      st.sendMs = st.sendMs > 0 ? st.sendMs * 0.6 + dt * 0.4 : dt;
+      st.sent++;
     } catch (e) {
+      // 出错就停：不重试、不刷屏。
       abort(`灯效下发失败，已停止：${e}`);
     } finally {
       inFlight = false;
@@ -154,6 +249,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     try {
       const s = await api.musicStatus();
       st.status = s;
+      sampleRate();
       if (s.error) {
         abort(`音频采集出错，已停止：${s.error}`);
         return;
@@ -162,6 +258,8 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         abort(null);
         return;
       }
+      // 实测的单帧耗时变了（链路变慢等）就按新的节奏重挂定时器。
+      if (frameTimer && frameIntervalMs(st) !== frameInterval) startTimers();
       renderStatus();
     } catch (e) {
       abort(`状态读取失败，已停止：${e}`);
@@ -170,7 +268,8 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
 
   function startTimers(): void {
     clearTimers();
-    frameTimer = window.setInterval(() => void tickFrame(), Math.round(1000 / st.fps));
+    frameInterval = frameIntervalMs(st);
+    frameTimer = window.setInterval(() => void tickFrame(), frameInterval);
     statusTimer = window.setInterval(() => void tickStatus(), STATUS_MS);
   }
 
@@ -189,11 +288,28 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     renderStatus();
   }
 
+  /**
+   * 读一次链路（有线 / 无线），它决定下发的速率上限。整个设备信息是一串命令，
+   * 无线下要好几百毫秒，所以只在进页面和起流时各读一次。
+   */
+  async function refreshLink(): Promise<void> {
+    try {
+      const d = await api.deviceStatus();
+      st.link = d.framed ? "wireless" : "wired";
+    } catch {
+      // 读不到就保持上一次的结果；为 null 时按最保守的无线速率跑。
+    }
+    renderStatus();
+    // 链路变了，生效速率跟着变，定时器要重挂。
+    if (st.running) startTimers();
+  }
+
   async function startStream(): Promise<void> {
     showError(null);
     startBtn.disabled = true;
     const task = beginLoading("正在启动神光同步…");
     try {
+      await refreshLink();
       await api.musicStart(Math.round(st.bands));
     } catch (e) {
       showError(`启动音频采集失败：${e}`);
@@ -206,6 +322,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       task.done();
     }
     st.running = true;
+    st.sent = 0;
+    st.dropped = 0;
+    st.actualFps = 0;
+    st.sendMs = 0;
+    rateAt = 0;
+    rateSent = 0;
     renderControls();
     renderStatus();
     startTimers();
@@ -224,8 +346,16 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       task.done();
     }
     st.status = null;
+    st.actualFps = 0;
     renderControls();
     renderStatus();
+  }
+
+  function paintAccent(c: Rgb): void {
+    const rgb = `rgb(${c.r}, ${c.g}, ${c.b})`;
+    accentVal.textContent = rgb;
+    accentVal.style.color = rgb;
+    accentSwatch.style.background = rgb;
   }
 
   startBtn.onclick = () => void startStream();
@@ -245,27 +375,32 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   };
   fpsIn.oninput = () => {
     st.fps = Number(fpsIn.value);
-    fpsVal.textContent = `${st.fps} fps`;
-  };
-  fpsIn.onchange = () => {
+    // 拖动时就把生效速率换上去，免得读数显示的节奏跟实际发的不一致。
     if (st.running) startTimers();
+    renderStatus();
   };
 
+  // 只要主题色写进主灯 / 侧灯，频谱推送照跑，两者互不干扰。
   syncBtn.onclick = async () => {
     syncBtn.disabled = true;
-    // 两者走同一条逐键改色通道，会互相覆盖，先把频谱推送停掉。
-    if (st.running) await stopStream();
+    const task = beginLoading("正在把主题色写进主灯与侧灯…");
     try {
-      const c = await api.windowsAccentColor();
-      accentVal.textContent = `rgb(${c.r}, ${c.g}, ${c.b})`;
-      accentVal.style.color = `rgb(${c.r}, ${c.g}, ${c.b})`;
-      const frame = await api.musicAccentFrame();
-      await api.setKeyColors(frame);
-      toast(`已按主题色 rgb(${c.r}, ${c.g}, ${c.b}) 下发全键盘`);
+      const r = await api.applyAccentToZones();
+      paintAccent(r.color);
+      const failed = r.zones.filter((z) => !z.ok);
+      if (failed.length) {
+        const detail = failed.map((z) => `${z.name}：${z.error ?? "写入失败"}`).join("；");
+        showError(`主题色没有完全写进去 —— ${detail}`);
+        toast("部分灯区写入失败，详情见页面提示", true);
+      } else {
+        showError(null);
+        toast("已把 Windows 主题色写入主灯与侧灯");
+      }
     } catch (e) {
-      showError(`主题色同步失败：${e}`);
-      toast(`主题色同步失败：${e}`, true);
+      showError(`主题色写入失败：${e}`);
+      toast(`主题色写入失败：${e}`, true);
     } finally {
+      task.done();
       syncBtn.disabled = false;
     }
   };
@@ -274,7 +409,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     el("h1", { text: "神光同步" }),
     el("p", {
       class: "sub",
-      text: "让键盘灯光跟随电脑正在播放的声音律动。",
+      text: "让键盘灯光跟随电脑正在播放的声音律动：每一列键是一根频谱柱，从下往上长。",
     }),
     el(
       "div",
@@ -291,15 +426,19 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         "div",
         { class: "row" },
         field("更新频率", el("div", { class: "slider-row" }, fpsIn, fpsVal)),
-        el("span", { class: "hint", text: "改动立即生效。" }),
+        el("span", { class: "hint", text: "无线链路会自动降速，实际速率与单帧耗时见下方读数。" }),
       ),
       el("div", { class: "block-label", text: "Windows 主题色" }),
       el(
         "div",
         { class: "row" },
         syncBtn,
-        el("span", { class: "hint" }, "当前强调色：", accentVal),
+        el("span", { class: "hint" }, accentSwatch, "当前强调色：", accentVal),
       ),
+      el("div", {
+        class: "hint",
+        text: "点按后写入键盘主灯与侧灯的自定义颜色，其余灯效参数保持不变。",
+      }),
     ),
     el(
       "div",
@@ -317,6 +456,16 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
         stat("频段", statBands),
         stat("状态", statState),
       ),
+      el("div", { class: "block-label", text: "下发" }),
+      el(
+        "div",
+        { class: "row" },
+        stat("链路", statLink),
+        stat("生效帧率", statRate),
+        stat("实际帧率", statActual),
+        stat("丢弃帧数", statDropped),
+      ),
+      el("div", { class: "row", style: "margin-top:8px" }, sendHint),
       errBox,
       el("div", { class: "block-label", text: "实时频段" }),
       bars,
@@ -325,9 +474,20 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
 
   renderControls();
   renderStatus();
+  void loadAccent();
+  void refreshLink();
   if (st.running) {
     // 从别的页面切回来：后端还在采集，重新挂上定时器即可。
     void tickStatus();
     startTimers();
+  }
+
+  /** 进页面就把当前强调色读出来填色块（失败不报错，点按钮时还会再试）。 */
+  async function loadAccent(): Promise<void> {
+    try {
+      paintAccent(await api.windowsAccentColor());
+    } catch {
+      /* 读不到注册表就留空 */
+    }
   }
 }

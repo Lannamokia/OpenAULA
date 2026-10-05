@@ -57,7 +57,9 @@ Chromium/WebView2 会把 `setTimeout` 节流到 ~1 次/秒、`requestAnimationFr
 - 采集：拿默认 Render 端点却用 `Direction::Capture` 初始化 —— `wasapi` crate 据此自动加
   `AUDCLNT_STREAMFLAGS_LOOPBACK`，读到的是系统正在播放的声音。
 - 参数：2048 点 Hann 窗 / hop 1024，12 段对数分布（40 Hz..16 kHz），快攻慢放平滑，dB 归一到 0..1。
-- 映射：按 `data/layout68.json` 的 `col` 分 15 列，`band_idx = j*n/cols`，HSL 240°→165°→0°，能量 <0.02 熄灭。
+- 映射：按 `data/layout68.json` 的 `col` 分 **15 列**，列内按 `row` 降序（row 4 = 底部），**频率段 → 列**、
+  能量 → **从底部往上点亮的高度**（频谱仪那种柱子），未达高度的键给全黑；色相按列 8°→296°。
+  **整列同色是刻意的**：逐键渐变换来的发色数会把一帧顶到 255 字节上限（≈5 个包 ≈ 无线 0.5s）。
 - 主题色：`HKCU\Software\Microsoft\Windows\DWM\AccentColor`（DWORD = **ABGR**，需反转）。
 - 独立验证（2026-10-06）：播放 `C:\Windows\Media\Alarm01.wav` 时 `frames` 55→337、`peak` ≈0.5、
   各频段随声音起伏，`music_frame` 出 68 键 / 61 键点亮 / 10 种颜色；`music_stop` 后 `running=false`。
@@ -78,9 +80,12 @@ Chromium/WebView2 会把 `setTimeout` 节流到 ~1 次/秒、`requestAnimationFr
 3. **`0x86/0` 批量读固件有 bug**：一次请求多个 id 返回错位（详见 `docs/commands.md` §4.1 的对照表），
    驱动里已改成**逐个读**并校验回显 id。
 4. **DKS 的 `triggers` 4 字节 / SOCD 的 `response_mode`**：UI 允许填，但固件对取值的接受范围未实测。
-5. **神光同步未在真机上下发验证**：音频侧证实有效，但「30 fps 连续刷灯」对键盘的实际吞吐/丢包未测；
-   建议先用低刷新率（10-15 fps）试，再逐步提高。
-6. **Logo / 灯箱灯区**：本机型不存在（写入被 ACK 但读回不变），能力块也不报告。
+5. **神光同步的下发节奏**：前端**绝不排队**——上一帧没发完就丢弃这一帧（界面显示丢弃帧数）；
+   间隔 = `max(链路下限, 实测单帧耗时×1.15+5ms)`，**无线下限 100ms（≤10fps）**，有线用用户设定。
+   无线下一帧 `0x08/1` 可能要 1–2 个包，每包一次完整握手（~87ms），所以**无线别指望高帧率**。
+6. **主题色按钮**（`apply_accent_to_zones`）：把 Windows 强调色写进**主灯(1)与侧灯(6)的自定义颜色**
+   （只换 `color` 与 `colorIndex=0`，保留 effectId/brightness/speed），一区失败不影响另一区。
+7. **Logo / 灯箱灯区**：本机型不存在（写入被 ACK 但读回不变），能力块也不报告。
 7. **轴体校准**：`0x94/0x00` 起 / `0x94/0x04` 停；**必须每 1 秒重发 Start**，进度由
    `0x94/param=2` 持续上报（实测 15 秒 242 条，63 字节信封 + 6 字节/条）。进/出校准的
    全键底色与「按过变绿」由固件自己控制，主机命令管不了。见 `docs/commands.md` §11.4。

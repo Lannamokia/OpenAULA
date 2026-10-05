@@ -3,7 +3,8 @@
 //! 分工：Rust 侧只做「WASAPI 回环采集 → FFT → 频段能量 → 键颜色帧」，**完全不碰
 //! HID**。前端按刷新率调 [`music_frame`] 取帧，再用已验证的 `set_key_colors`
 //! （`0x08/1`）下发。这样后台线程不必争用 `AppState` 的设备 Mutex，也不会重复
-//! 打开 HID 句柄。
+//! 打开 HID 句柄。下发的节流在 `src/pages/music.ts`：链路是无线就压低帧率，
+//! 上一帧没发完就丢帧（见那里的注释）。
 //!
 //! 采集走 WASAPI **loopback**：取默认**渲染**端点的 `IAudioClient`，却用
 //! `Direction::Capture` 初始化 —— `wasapi` crate 据此加上
@@ -420,6 +421,7 @@ struct LayoutKey {
     #[serde(rename = "keyValue")]
     key_value: u16,
     col: i32,
+    row: i32,
 }
 
 fn layout() -> &'static Vec<LayoutKey> {
@@ -429,52 +431,82 @@ fn layout() -> &'static Vec<LayoutKey> {
     })
 }
 
-/// 按 `col` 分组后的物理键列，从左到右排列。
-fn columns() -> &'static Vec<(i32, Vec<u16>)> {
-    static COLS: OnceLock<Vec<(i32, Vec<u16>)>> = OnceLock::new();
+/// 键区的物理列（按 `col` 从左到右），列内**自下而上**排列 —— 布局数据里
+/// `y` 随 `row` 增大而增大（row 4 是贴身体的那一排），所以 `row` 大的排在前面，
+/// 每列的第 0 个就是最靠近身体的键。柱状频谱从这里往上长。
+fn columns() -> &'static Vec<(i32, Vec<(i32, u16)>)> {
+    static COLS: OnceLock<Vec<(i32, Vec<(i32, u16)>)>> = OnceLock::new();
     COLS.get_or_init(|| {
-        let mut map: BTreeMap<i32, Vec<u16>> = BTreeMap::new();
+        let mut map: BTreeMap<i32, Vec<(i32, u16)>> = BTreeMap::new();
         for k in layout() {
-            map.entry(k.col).or_default().push(k.key_value);
+            map.entry(k.col).or_default().push((k.row, k.key_value));
         }
-        map.into_iter().collect()
+        map.into_iter()
+            .map(|(col, mut keys)| {
+                keys.sort_by(|a, b| b.0.cmp(&a.0));
+                (col, keys)
+            })
+            .collect()
     })
 }
 
-/// 频段数 → 列数：段多则相邻几段并成一列，段少则一段铺满多列。
+/// 一列对应的能量。频段数 ≥ 列数时把该列覆盖到的几段**合并**（取最响的一段，
+/// 峰值不被平均掉）；频段数 < 列数时一段**重复**铺给多列。
+fn column_energy(bands: &[f32], col: usize, cols: usize) -> f32 {
+    let n = bands.len();
+    if n == 0 || cols == 0 {
+        return 0.0;
+    }
+    if n < cols {
+        return bands[(col * n / cols).min(n - 1)];
+    }
+    let lo = col * n / cols;
+    let hi = ((col + 1) * n).div_ceil(cols).min(n);
+    bands[lo..hi].iter().copied().fold(0.0f32, f32::max)
+}
+
+/// 列 → 色相：低频（左）偏红、高频（右）偏紫，像音乐软件的频谱柱。
+fn column_hue(col: usize, cols: usize) -> f32 {
+    if cols <= 1 {
+        return 200.0;
+    }
+    8.0 + 288.0 * (col as f32 / (cols - 1) as f32)
+}
+
+/// 柱子的颜色：色相 = 频率位置（低频偏红 → 高频偏紫），亮度 = 这一列的能量。
+///
+/// 整列同色是**刻意的**：逐键渐变会让一帧里的不同颜色数涨到几十个，而下发的
+/// 通道按颜色聚类整包发送，无线链路上一个包就是一个完整往返 —— 一帧多包就是
+/// 几百毫秒的延迟。整列同色时一帧最多 16 个颜色（15 列 + 黑），通常只要 1 个包。
+fn column_color(hue: f32, h: f32) -> Rgb {
+    hsl_to_rgb(hue, 0.95, (0.16 + 0.46 * h).clamp(0.05, 0.72))
+}
+
+/// 当前频段能量 → 整键盘 68 键的颜色帧：每列一根从底部往上长的柱子，
+/// 柱子高度 = 该列能量，未达到高度的键全黑。
 fn band_frame(bands: &[f32], gain: f32) -> Vec<KeyColor> {
     let cols = columns();
     if cols.is_empty() {
         return Vec::new();
     }
     let gain = if gain.is_finite() && gain > 0.0 { gain } else { 1.0 };
-    let n = bands.len();
     let mut out = Vec::with_capacity(layout().len());
-    for (j, (_, ids)) in cols.iter().enumerate() {
-        let color = if n == 0 {
-            Rgb { r: 0, g: 0, b: 0 }
+    for (j, (_, keys)) in cols.iter().enumerate() {
+        let raw = column_energy(bands, j, cols.len()) * gain;
+        let h = if raw.is_finite() { raw.clamp(0.0, 1.0) } else { 0.0 };
+        // 有一点能量至少点亮最底下一颗，静音（低于阈值）则整列全黑。
+        let lit = if h < LEVEL_MIN {
+            0
         } else {
-            level_color(bands[(j * n / cols.len()).min(n - 1)] * gain)
+            (h * keys.len() as f32).ceil() as usize
         };
-        for id in ids {
+        let color = column_color(column_hue(j, cols.len()), h);
+        for (i, (_, id)) in keys.iter().enumerate() {
+            let color = if i < lit { color } else { Rgb { r: 0, g: 0, b: 0 } };
             out.push(KeyColor { id: *id, color });
         }
     }
     out
-}
-
-/// 能量 → 颜色：低=暗蓝、中=青绿、高=红；低于阈值熄灭。
-fn level_color(v: f32) -> Rgb {
-    if !v.is_finite() || v < LEVEL_MIN {
-        return Rgb { r: 0, g: 0, b: 0 };
-    }
-    let t = v.clamp(0.0, 1.0);
-    let hue = if t < 0.5 {
-        240.0 + (165.0 - 240.0) * (t * 2.0)
-    } else {
-        165.0 - 165.0 * ((t - 0.5) * 2.0)
-    };
-    hsl_to_rgb(hue, 1.0, 0.12 + 0.48 * t)
 }
 
 fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Rgb {
@@ -494,20 +526,13 @@ fn hsl_to_rgb(h: f32, s: f32, l: f32) -> Rgb {
     Rgb { r: to(r), g: to(g), b: to(b) }
 }
 
-fn full_frame(color: Rgb) -> Vec<KeyColor> {
-    layout()
-        .iter()
-        .map(|k| KeyColor { id: k.key_value, color })
-        .collect()
-}
-
 // --- Windows 主题强调色 --------------------------------------------------------
 
 const DWM_KEY: &str = r"Software\Microsoft\Windows\DWM";
 
 /// 读 `HKCU\...\DWM\AccentColor`（DWORD，字节序 ABGR → RGB）。
 /// 该值缺失时退回 `ColorizationColor`（DWORD，字节序 ARGB）。
-fn accent_color() -> Result<Rgb, String> {
+pub(crate) fn accent_color() -> Result<Rgb, String> {
     use winreg::enums::{HKEY_CURRENT_USER, KEY_READ};
     use winreg::RegKey;
     let dwm = RegKey::predef(HKEY_CURRENT_USER)
@@ -598,8 +623,127 @@ pub fn windows_accent_color() -> Result<Rgb, String> {
     accent_color()
 }
 
-/// 主题强调色 → 整键盘单色帧。
-#[tauri::command]
-pub fn music_accent_frame() -> Result<Vec<KeyColor>, String> {
-    Ok(full_frame(accent_color()?))
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 布局里某键的 `(col, row)`。
+    fn key_pos(id: u16) -> (i32, i32) {
+        let k = layout().iter().find(|k| k.key_value == id).expect("键 id 在布局里");
+        (k.col, k.row)
+    }
+
+    /// 只有最低频段满格：只有最左那根柱子亮（含它最底下的键），其余全黑。
+    /// 频段数取上限 24 ≥ 列数 15，最低频段才不会被分给多列。
+    #[test]
+    fn bass_only_lights_the_leftmost_column_from_the_bottom() {
+        let mut bands = vec![0.0f32; MAX_BANDS as usize];
+        bands[0] = 1.0;
+        let frame = band_frame(&bands, 1.0);
+        assert_eq!(frame.len(), layout().len());
+
+        let left = columns()[0].0;
+        let bottom_id = columns()[0].1[0].1;
+        for kc in &frame {
+            let (col, _) = key_pos(kc.id);
+            if col == left {
+                assert_ne!(kc.color, Rgb { r: 0, g: 0, b: 0 }, "左列应亮: id {}", kc.id);
+            } else {
+                assert_eq!(kc.color, Rgb { r: 0, g: 0, b: 0 }, "其余列应全黑: id {}", kc.id);
+            }
+        }
+        // 柱子的根在列底（布局里 row 最大的那一排）。
+        let (_, row) = key_pos(bottom_id);
+        assert_eq!(row, columns()[0].1.iter().map(|(r, _)| *r).max().unwrap());
+    }
+
+    /// 高度从底部往上长：能量只够点亮最底下一颗时，上面的键必须是黑的。
+    #[test]
+    fn column_height_rises_from_the_bottom() {
+        let cols = columns()[0].1.len() as f32;
+        let mut bands = vec![0.0f32; MAX_BANDS as usize];
+        bands[0] = 1.0 / (2.0 * cols);
+        let frame = band_frame(&bands, 1.0);
+        let left = columns()[0].0;
+        let lit: Vec<u16> = frame
+            .iter()
+            .filter(|k| k.color != Rgb { r: 0, g: 0, b: 0 })
+            .map(|k| k.id)
+            .collect();
+        assert_eq!(lit.len(), 1, "只应点亮最底下一颗");
+        assert_eq!(key_pos(lit[0]), (left, columns()[0].1[0].0));
+    }
+
+    /// 静音（低于阈值）与 0 段输入都不该点亮任何键。
+    #[test]
+    fn silence_and_empty_input_are_black() {
+        let black = Rgb { r: 0, g: 0, b: 0 };
+        for bands in [vec![0.0f32; MAX_BANDS as usize], Vec::new()] {
+            assert!(band_frame(&bands, 1.0).iter().all(|k| k.color == black));
+        }
+        // 增益为 0 / NaN / 负数时按 1× 处理，而不是把整块键盘打黑。
+        let mut loud = vec![0.0f32; MAX_BANDS as usize];
+        loud[0] = 1.0;
+        assert!(band_frame(&loud, 0.0).iter().any(|k| k.color != black));
+    }
+
+    /// 发色数是速率的关键：整列同色 + 一种黑，一帧最多「列数 + 1」个颜色，
+    /// 载荷因此远在上限（255 字节）之内，不会触发聚类合并。
+    #[test]
+    fn a_frame_uses_one_color_per_column() {
+        let colors_of = |frame: &[KeyColor]| {
+            let mut v: Vec<Rgb> = frame.iter().map(|k| k.color).collect();
+            v.sort_by_key(|c| (c.r, c.g, c.b));
+            v.dedup();
+            v.len()
+        };
+        // 全亮 = 最坏情况。
+        let all = vec![1.0f32; MAX_BANDS as usize];
+        let frame = band_frame(&all, 1.0);
+        let groups = colors_of(&frame);
+        assert!(groups <= columns().len() + 1, "{groups} 个颜色超过 列数 + 黑");
+        assert!(4 * groups + frame.len() <= 255, "一帧载荷超过单条命令的上限");
+        // 常见情形（低半段有声音）要能塞进两个包，无线电上一帧就是两个往返。
+        let mut half = vec![0.0f32; MAX_BANDS as usize];
+        for b in half.iter_mut().take(MAX_BANDS as usize / 2) {
+            *b = 1.0;
+        }
+        let hf = band_frame(&half, 1.0);
+        assert!(4 * colors_of(&hf) + hf.len() <= 112, "常见帧应能塞进 2 个包");
+    }
+
+    /// 频段数 < 列数时一段要铺给多列（重复），最左列仍属最低频段。
+    #[test]
+    fn fewer_bands_than_columns_repeat_each_band() {
+        let mut bands = vec![0.0f32; MIN_BANDS as usize];
+        bands[0] = 1.0;
+        let frame = band_frame(&bands, 1.0);
+        let left = columns()[0].0;
+        assert!(frame
+            .iter()
+            .any(|k| key_pos(k.id).0 == left && k.color != Rgb { r: 0, g: 0, b: 0 }));
+        // 高频段没能量 → 最右列必黑。
+        let right = columns().last().unwrap().0;
+        assert!(frame
+            .iter()
+            .filter(|k| key_pos(k.id).0 == right)
+            .all(|k| k.color == Rgb { r: 0, g: 0, b: 0 }));
+    }
+
+    /// 频段 → 列的分组既不漏段也不越界。
+    #[test]
+    fn column_energy_covers_every_band_without_panicking() {
+        let cols = columns().len();
+        let mut bands = vec![0.0f32; MAX_BANDS as usize];
+        bands[MAX_BANDS as usize - 1] = 1.0;
+        for j in 0..cols {
+            assert!(column_energy(&bands, j, cols).is_finite());
+        }
+        // 最高频段只影响它自己那一列：最右列亮，最左列黑。
+        let frame = band_frame(&bands, 1.0);
+        let left = columns()[0].0;
+        let right = columns().last().unwrap().0;
+        assert!(frame.iter().filter(|k| key_pos(k.id).0 == left).all(|k| k.color == Rgb { r: 0, g: 0, b: 0 }));
+        assert!(frame.iter().filter(|k| key_pos(k.id).0 == right).any(|k| k.color != Rgb { r: 0, g: 0, b: 0 }));
+    }
 }

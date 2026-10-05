@@ -378,6 +378,52 @@ pub fn set_zone_effect(
     })
 }
 
+/// 「把 Windows 主题强调色写进主灯与侧灯」的结果：写进去的颜色 + 每个灯区是否成功。
+#[derive(Debug, Clone, Serialize)]
+pub struct AccentZoneResult {
+    pub base: u8,
+    pub name: &'static str,
+    pub ok: bool,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AccentApplyResult {
+    pub color: Rgb,
+    pub zones: Vec<AccentZoneResult>,
+}
+
+/// 读 `0x84/<base>` 的当前效果 → 只把颜色换成 Windows 强调色（`colorIndex = 0`
+/// 固定色），effectId / brightness / speed / direction 原样保留 → 用 `0x04/<base>`
+/// 整块写回。只碰主灯与侧灯，一个灯区失败不影响另一个（结果里逐个报告）。
+#[tauri::command]
+pub fn apply_accent_to_zones(state: tauri::State<'_, AppState>) -> Result<AccentApplyResult, String> {
+    let color = crate::music::accent_color()?;
+    with_device(&state, |d| {
+        let direction_supported = d
+            .lighting_caps()
+            .ok()
+            .map(|c| c.direction_supported)
+            .unwrap_or(false);
+        let mut zones = Vec::new();
+        for (base, name) in [(BASE_MAIN, "主灯"), (BASE_SIDE, "侧灯")] {
+            let written = (|| -> Result<(), String> {
+                let mut effect = d.read_zone_effect(base, direction_supported)?;
+                effect.color = color;
+                effect.color_index = 0;
+                d.write_zone_effect(base, &effect, direction_supported)
+            })();
+            zones.push(AccentZoneResult {
+                base,
+                name,
+                ok: written.is_ok(),
+                error: written.err(),
+            });
+        }
+        Ok(AccentApplyResult { color, zones })
+    })
+}
+
 #[tauri::command]
 pub fn set_full_keys_rgb(state: tauri::State<'_, AppState>, color: Rgb) -> Result<(), String> {
     with_device(&state, |d| d.set_full_keys_rgb(&color))

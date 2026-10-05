@@ -272,6 +272,19 @@ export interface KeyColor {
   color: Rgb;
 }
 
+/** 「把 Windows 主题强调色写进主灯与侧灯」的结果。 */
+export interface AccentZoneResult {
+  base: number;
+  name: string;
+  ok: boolean;
+  error: string | null;
+}
+
+export interface AccentApplyResult {
+  color: Rgb;
+  zones: AccentZoneResult[];
+}
+
 export const api = {
   listDevices: () => invoke<DeviceDesc[]>("list_devices"),
   openDevice: (path?: string) =>
@@ -328,6 +341,9 @@ export const api = {
     invoke<ZoneEffect>("lighting_zone", { base, directionSupported }),
   setZoneEffect: (base: number, effect: ZoneEffect) =>
     invoke<void>("set_zone_effect", { base, effect }),
+  /** 读主灯 / 侧灯的当前效果 → 只换颜色为 Windows 强调色 → 整块写回。 */
+  applyAccentToZones: () =>
+    invoke<AccentApplyResult>("apply_accent_to_zones"),
   setFullKeysRgb: (color: Rgb) =>
     invoke<void>("set_full_keys_rgb", { color }),
   setKeyColors: (entries: KeyColor[]) =>
@@ -347,8 +363,6 @@ export const api = {
   musicStatus: () => invoke<MusicStatus>("music_status"),
   /** 当前频段能量 → 整键盘 68 键颜色帧（不下发，交给 setKeyColors）。 */
   musicFrame: (gain: number) => invoke<KeyColor[]>("music_frame", { gain }),
-  /** Windows 主题强调色 → 整键盘单色帧。 */
-  musicAccentFrame: () => invoke<KeyColor[]>("music_accent_frame"),
   windowsAccentColor: () => invoke<Rgb>("windows_accent_color"),
 
   // --- 磁轴触发 / 性能（docs/commands.md §7）---------------------------------
