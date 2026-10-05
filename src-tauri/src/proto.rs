@@ -1,6 +1,6 @@
-//! Protocol layer, ported 1:1 from `tools/aula_hid.py` (spiderdriver project),
-//! which was verified against the real device. See the parent project's
-//! `docs/protocol.md` for the full protocol description.
+//! Protocol layer, ported 1:1 from the Python reference in the spiderdriver
+//! reverse-engineering workspace, which was verified against the real device.
+//! See `docs/protocol.md` for the full protocol description.
 //!
 //! Three layers: HID report (20 bytes, report id 9 + 19 payload) -> link frames
 //! (0x66 magic, per-frame ACK) -> application packet (63-byte envelope).

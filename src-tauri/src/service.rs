@@ -1,7 +1,7 @@
 //! High-level device session: link-adaptive exchange plus the service
 //! operations (device info / battery / keymap / profiles / macros /
-//! advanced keys). Semantics ported from `tools/aula_hid.py`; command
-//! byte layouts from the parent project's `docs/commands.md`.
+//! advanced keys). Semantics ported from the Python reference in the
+//! spiderdriver workspace; command byte layouts from `docs/commands.md`.
 //!
 //! Link selection mirrors the SDK: `product_id == 0x106C` (8K wireless
 //! receiver) uses 0x66 framing with per-frame ACKs; any other PID (e.g.

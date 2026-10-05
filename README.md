@@ -122,7 +122,7 @@ cargo run --example probe        # ★ 只读真机探测，不写任何东西
 
 ## 协议
 
-完整协议文档（逐命令的 cmd / param / 参数 / 应答）在姊妹项目里：
+完整协议文档（逐命令的 cmd / param / 参数 / 应答）在本仓库 `docs/` 里：
 
 - `docs/protocol.md` —— 链路层与应用包信封
 - `docs/commands.md` —— 每条命令；灯光、宏、高级键、磁轴触发、事件、无线裸报文、legacy `AA` 族
@@ -164,9 +164,15 @@ cargo run --example probe        # ★ 只读真机探测，不写任何东西
 
 ## 致谢与来源
 
-协议还原工作出自 **spiderdriver** 项目（`tools/aula_hid.py` 是已验证的 Python 参考实现，
-`tools/deobf-vendor/` 是反混淆后的官方 SDK）。本仓库是它的可运行落地。
+协议还原工作出自 **spiderdriver** 逆向工作区：那里有已验证的 Python 参考实现
+（`aula_hid.py`）和反混淆后的官方 SDK（`deobf-vendor/`）。**这两样都不在本仓库里** ——
+后者是厂商的代码，不随本项目分发。
+
+`src/data/` 下的表（键码、机型、灯效名、键位布局）是从官方网页驱动的数据里还原出来的
+事实性数据，用来说明设备行为；本项目不含厂商的可执行代码或固件。
 
 ## 许可
 
-尚未指定许可证。在你自行添加之前，请视作"保留所有权利"。
+MIT，见 [LICENSE](LICENSE)。
+
+与 AULA 官方无任何关系；「AULA」等商标归其所有者。

@@ -1,6 +1,6 @@
 # 待办与交接笔记
 
-> 当前进度见 `README.md` 的功能状态表；协议细节见父项目 `docs/commands.md`、`docs/keycodes.md`。
+> 当前进度见 `README.md` 的功能状态表；协议细节见 `docs/commands.md`、`docs/keycodes.md`。
 > 参考实现（Python，真机验证）：`../tools/aula_hid.py`。
 
 ## 已全部完成（2026-10-06）
