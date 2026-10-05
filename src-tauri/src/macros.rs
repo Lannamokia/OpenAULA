@@ -6,7 +6,12 @@
 //!     equals `4 × macroCount` (i.e. the header table length).
 //!   - body = `[nameLen][UTF-8 name][action × N]`
 //!   - action = 4 bytes
-//!     `[((kind&1)<<7)|((device&7)<<4)|((delay>>16)&15), (delay>>8)&255, delay&255, keycode]`
+//!     `[((kind&1)<<7)|((category&7)<<4)|((delay>>16)&15), (delay>>8)&255, delay&255, keycode]`
+//!
+//!   bits 4..6 are the **action category** (SDK enum `a8`), *not* a device type —
+//!   see [`CAT_NORMAL`]/[`CAT_MODIFIER`]/[`CAT_MOUSE`]. Byte-exact confirmation:
+//!   the vendor page's own `macro.setMacros` traffic was captured and asserted in
+//!   `tests::encode_matches_vendor_capture` / `tests::decode_matches_vendor_capture`.
 //!
 //! ⚠ The device erases everything **beyond the written length** (0xff). We always
 //! write the complete set (header + every body) and only ever after a full read,
@@ -31,14 +36,36 @@ const MACRO_PER_PACKET: usize = 56;
 /// One macro action (4 bytes on the wire).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MacroAction {
-    /// bit7 of byte 0: `0` = 按下, `1` = 抬起.
+    /// bit7 of byte 0: `0` = 按下, `1` = 抬起 (SDK enum `lg`: Down=0, Up=1).
     pub kind: u8,
-    /// bits 4..6 of byte 0: `0` = 键盘, `1` = 鼠标, `2` = 多媒体.
-    pub device: u8,
+    /// bits 4..6 of byte 0: 动作类别 (SDK enum `a8`) — 按键**种类**, 不是设备类型.
+    /// [`CAT_NORMAL`] / [`CAT_MODIFIER`] / [`CAT_MOUSE`], plus `3/4/5` =
+    /// MouseX / MouseY / MouseWheel (decoded only — the SDK never encodes them).
+    pub category: u8,
     /// 20-bit delay in milliseconds (`0..=0xFFFFF`).
     pub delay: u32,
-    /// 1-byte keycode.
+    /// 1-byte payload: keyboard = HID usage, modifier = `0xE0..=0xE7`,
+    /// mouse = button bitmask (Left 1, Right 2, Wheel 4, Back 8, Forward 16).
     pub keycode: u8,
+}
+
+/// bits 4..6 = 0 — 普通键盘按键 (`a8.Normal`).
+pub const CAT_NORMAL: u8 = 0;
+/// bits 4..6 = 1 — 修饰键 (`a8.Modifier`), keycode 取 `0xE0..=0xE7`.
+pub const CAT_MODIFIER: u8 = 1;
+/// bits 4..6 = 2 — 鼠标按键 (`a8.Mouse`), keycode 是按键位掩码.
+pub const CAT_MOUSE: u8 = 2;
+
+/// 键盘按键该用哪个类别: `0xE0..=0xE7` 是修饰键 (SDK `nI`), 其余是普通按键.
+///
+/// 录制/编辑出来的键盘动作必须走这里定类别 —— 修饰键若写成 [`CAT_NORMAL`],
+/// 固件会把 `0xE1` 当普通键码塞进按键槽位, 按下与抬起都不会生效.
+pub fn keyboard_category(keycode: u8) -> u8 {
+    if (0xE0..=0xE7).contains(&keycode) {
+        CAT_MODIFIER
+    } else {
+        CAT_NORMAL
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,7 +92,7 @@ pub struct MacroRegion {
 fn decode_action(b: [u8; 4]) -> MacroAction {
     MacroAction {
         kind: (b[0] >> 7) & 1,
-        device: (b[0] >> 4) & 7,
+        category: (b[0] >> 4) & 7,
         delay: (((b[0] & 0x0F) as u32) << 16) | ((b[1] as u32) << 8) | b[2] as u32,
         keycode: b[3],
     }
@@ -74,7 +101,7 @@ fn decode_action(b: [u8; 4]) -> MacroAction {
 fn encode_action(a: &MacroAction) -> [u8; 4] {
     let d = a.delay & 0x000F_FFFF;
     [
-        ((a.kind & 1) << 7) | ((a.device & 7) << 4) | (((d >> 16) as u8) & 0x0F),
+        ((a.kind & 1) << 7) | ((a.category & 7) << 4) | (((d >> 16) as u8) & 0x0F),
         ((d >> 8) & 0xFF) as u8,
         (d & 0xFF) as u8,
         a.keycode,
@@ -278,17 +305,39 @@ pub fn build_macro_read_packet() -> String {
 mod tests {
     use super::*;
 
-    fn act(kind: u8, device: u8, delay: u32, keycode: u8) -> MacroAction {
-        MacroAction { kind, device, delay, keycode }
+    /// 厂商实测宏区 (2026-10-06, HERO 68 XS / 8K 无线接收器).
+    ///
+    /// 用页面官方 SDK 的 `serviceContainer.macro.setMacros([...])` 写,
+    /// **抓 `transport.send` 的包**, 再用 `tools/aula_hid.py` 读回设备 —— 两者逐字节一致.
+    /// 输入的动作: KeyH↓d0, KeyH↑d50, ShiftLeft↓d7, ShiftLeft↑d300,
+    /// 鼠标 0↓d1, 0↑d2, 1↓d3, 1↑d4.
+    const VENDOR_REGION_ZTH: &[u8] = &[
+        0x04, 0x00, 0x23, 0x00, 0x02, 0x7a, 0x74, // header {4, 35} + nameLen 2 + "zt"
+        0x00, 0x00, 0x00, 0x0b, // KeyH  down  cat0 delay 0
+        0x80, 0x00, 0x32, 0x0b, // KeyH  up    cat0 delay 50
+        0x10, 0x00, 0x07, 0xe1, // Shift down  cat1 delay 7
+        0x90, 0x01, 0x2c, 0xe1, // Shift up    cat1 delay 300
+        0x20, 0x00, 0x01, 0x01, // 鼠标左键 down cat2 delay 1 (bitmask 0x01)
+        0xa0, 0x00, 0x02, 0x01, // 鼠标左键 up   cat2 delay 2
+        0x20, 0x00, 0x03, 0x04, // 鼠标中键 down cat2 delay 3 (bitmask 0x04)
+        0xa0, 0x00, 0x04, 0x04, // 鼠标中键 up   cat2 delay 4
+    ];
+
+    /// 厂商实测: 鼠标动作码 0..4 -> 键位掩码 (同一个 4 字节布局, 只有 byte3 变).
+    const VENDOR_MOUSE_BITS: [u8; 5] = [0x01, 0x04, 0x02, 0x08, 0x10];
+
+    fn act(kind: u8, category: u8, delay: u32, keycode: u8) -> MacroAction {
+        MacroAction { kind, category, delay, keycode }
     }
 
     #[test]
     fn action_roundtrip() {
         for a in [
-            act(0, 0, 0, 0x04),
-            act(1, 0, 100, 0x04),
-            act(0, 1, 0xFFFFF, 0xFF),
-            act(1, 2, 0x12345, 0x00),
+            act(0, CAT_NORMAL, 0, 0x04),
+            act(1, CAT_NORMAL, 100, 0x04),
+            act(0, CAT_MODIFIER, 0xFFFFF, 0xE1),
+            act(1, CAT_MOUSE, 0x12345, 0x10),
+            act(0, 5, 0, 0xFF),
         ] {
             assert_eq!(decode_action(encode_action(&a)), a);
         }
@@ -299,11 +348,14 @@ mod tests {
         let macros = vec![
             Macro {
                 name: "M1".into(),
-                actions: vec![act(0, 0, 0, 0x04), act(1, 0, 50, 0x04)],
+                actions: vec![
+                    act(0, CAT_NORMAL, 0, 0x04),
+                    act(1, CAT_NORMAL, 50, 0x04),
+                ],
             },
             Macro {
                 name: "组合".into(),
-                actions: vec![act(0, 0, 10, 0xE0)],
+                actions: vec![act(0, CAT_MODIFIER, 10, 0xE0)],
             },
         ];
         let region = build_region(&macros).unwrap();
@@ -323,9 +375,71 @@ mod tests {
     }
 
     #[test]
-    fn encode_matches_documentation() {
-        // ((kind&1)<<7)|((device&7)<<4)|((delay>>16)&15), delay>>8, delay&255, keycode
-        let a = act(1, 2, 0x0ABCD, 0x29);
+    fn encode_matches_byte_layout() {
+        // ((kind&1)<<7)|((category&7)<<4)|((delay>>16)&15), delay>>8, delay&255, keycode
+        let a = act(1, CAT_MOUSE, 0x0ABCD, 0x29);
         assert_eq!(encode_action(&a), [0xA0, 0xAB, 0xCD, 0x29]);
+    }
+
+    /// 我们编出来的头表 + 宏体必须逐字节等于厂商自己发出的那一段.
+    #[test]
+    fn encode_matches_vendor_capture() {
+        let macros = vec![Macro {
+            name: "zt".into(),
+            actions: vec![
+                act(0, CAT_NORMAL, 0, 0x0b),
+                act(1, CAT_NORMAL, 50, 0x0b),
+                act(0, CAT_MODIFIER, 7, 0xE1),
+                act(1, CAT_MODIFIER, 300, 0xE1),
+                act(0, CAT_MOUSE, 1, VENDOR_MOUSE_BITS[0]),
+                act(1, CAT_MOUSE, 2, VENDOR_MOUSE_BITS[0]),
+                act(0, CAT_MOUSE, 3, VENDOR_MOUSE_BITS[1]),
+                act(1, CAT_MOUSE, 4, VENDOR_MOUSE_BITS[1]),
+            ],
+        }];
+        assert_eq!(build_region(&macros).unwrap(), VENDOR_REGION_ZTH);
+    }
+
+    /// 读厂商写的那一段: 头表、名字、每个动作的字段都要还原得一模一样.
+    #[test]
+    fn decode_matches_vendor_capture() {
+        let (header_len, entries) = parse_header(VENDOR_REGION_ZTH);
+        assert_eq!(header_len, 4, "1 条宏 -> 头表 4 字节");
+        assert_eq!(entries, vec![(4, 0x23)]);
+        assert_eq!(
+            parse_bodies(VENDOR_REGION_ZTH, &entries),
+            vec![Macro {
+                name: "zt".into(),
+                actions: vec![
+                    act(0, CAT_NORMAL, 0, 0x0b),
+                    act(1, CAT_NORMAL, 50, 0x0b),
+                    act(0, CAT_MODIFIER, 7, 0xE1),
+                    act(1, CAT_MODIFIER, 300, 0xE1),
+                    act(0, CAT_MOUSE, 1, 0x01),
+                    act(1, CAT_MOUSE, 2, 0x01),
+                    act(0, CAT_MOUSE, 3, 0x04),
+                    act(1, CAT_MOUSE, 4, 0x04),
+                ],
+            }]
+        );
+    }
+
+    /// 修饰键必须落在 bits4..6 = 1, 否则固件不会按下/抬起它 (用户报的那个 bug).
+    #[test]
+    fn modifiers_take_the_modifier_category() {
+        for kc in 0xE0..=0xE7u8 {
+            assert_eq!(keyboard_category(kc), CAT_MODIFIER, "0x{kc:02X} 是修饰键");
+        }
+        for kc in [0x00, 0x04, 0x29, 0xDF, 0xE8, 0xFF] {
+            assert_eq!(keyboard_category(kc), CAT_NORMAL, "0x{kc:02X} 不是修饰键");
+        }
+        // ShiftLeft 按下 -> 0x10 ... 0xE1, 和厂商抓到的字节一致
+        let shift = act(0, keyboard_category(0xE1), 7, 0xE1);
+        assert_eq!(encode_action(&shift), VENDOR_REGION_ZTH[15..19]);
+        // 老实现把修饰键当 cat0 -> 0x00 ... 0xE1, 固件侧按下/抬起都不生效
+        assert_ne!(
+            encode_action(&act(0, CAT_NORMAL, 7, 0xE1)),
+            VENDOR_REGION_ZTH[15..19]
+        );
     }
 }

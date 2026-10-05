@@ -45,11 +45,14 @@ export interface RawResult {
 export interface MacroAction {
   /** bit7: 0 = 按下, 1 = 抬起。 */
   kind: number;
-  /** bits4-6: 0 = 键盘, 1 = 鼠标, 2 = 多媒体。 */
-  device: number;
+  /**
+   * bits4-6: 动作类别（SDK 枚举 `a8`），是按键**种类**而不是设备类型。
+   * 0 = 普通按键, 1 = 修饰键(0xE0-0xE7), 2 = 鼠标, 3/4/5 = MouseX/MouseY/滚轮。
+   */
+  category: number;
   /** 20 位毫秒延时（0..0xFFFFF）。 */
   delay: number;
-  /** 1 字节键码。 */
+  /** 1 字节键码：键盘 = HID 用途码；修饰键 = 0xE0-0xE7；鼠标 = 按键位掩码。 */
   keycode: number;
 }
 

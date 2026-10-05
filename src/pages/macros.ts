@@ -7,10 +7,25 @@ const KINDS: Array<[number, string]> = [
   [0, "按下"],
   [1, "抬起"],
 ];
-const DEVICES: Array<[number, string]> = [
-  [0, "键盘"],
-  [1, "鼠标"],
-  [2, "多媒体"],
+/** bits4-6 是动作类别（SDK 枚举 `a8`），不是设备类型。 */
+const CATEGORIES: Array<[number, string]> = [
+  [0, "普通按键"],
+  [1, "修饰键"],
+  [2, "鼠标"],
+  [3, "MouseX"],
+  [4, "MouseY"],
+  [5, "滚轮"],
+];
+const CAT_NORMAL = 0;
+const CAT_MODIFIER = 1;
+const CAT_MOUSE = 2;
+/** 鼠标按键：动作码 0..4 → 位掩码（页面 SDK 实测）。 */
+const MOUSE_BUTTONS: Array<[number, string]> = [
+  [0x01, "左键"],
+  [0x04, "中键"],
+  [0x02, "右键"],
+  [0x08, "后退"],
+  [0x10, "前进"],
 ];
 const LAYERS = [
   { label: "基础层", layer: 0 },
@@ -31,6 +46,14 @@ const estimateTotal = (list: Macro[]): number =>
   4 * list.length + list.reduce((s, m) => s + macroBytes(m), 0);
 const byteName = (v: number): string =>
   BYTE_KEYS.find((k) => k.value === v)?.name ?? "";
+const mouseButtonName = (v: number): string =>
+  MOUSE_BUTTONS.find(([bit]) => bit === v)?.[1] ?? "";
+/** 键盘动作该用哪个类别：0xE0-0xE7 是修饰键，其余是普通按键。 */
+const keyboardCategory = (keycode: number): number =>
+  keycode >= 0xe0 && keycode <= 0xe7 ? CAT_MODIFIER : 0;
+/** 该类别下键码的显示名：鼠标动作的键码是按键位掩码，键盘动作是 HID 用途码。 */
+const actionByteName = (v: number, category: number): string =>
+  category === CAT_MOUSE ? mouseButtonName(v) : byteName(v);
 
 function parseByte(s: string): number | null {
   const t = s.trim().toLowerCase();
@@ -292,11 +315,12 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
       dirty = true;
       refreshCap();
     };
-    const devSel = el("select");
-    for (const [v, n] of DEVICES) devSel.append(el("option", { value: String(v), text: n }));
-    devSel.value = String(a.device);
-    devSel.onchange = () => {
-      a.device = Number(devSel.value);
+    const catSel = el("select");
+    for (const [v, n] of CATEGORIES) catSel.append(el("option", { value: String(v), text: n }));
+    catSel.value = String(a.category);
+    catSel.onchange = () => {
+      a.category = Number(catSel.value);
+      fillKcOptions();
       dirty = true;
       refreshCap();
     };
@@ -316,13 +340,6 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     };
 
     const kcSel = el("select", { style: "max-width:220px" });
-    kcSel.append(el("option", { value: "", text: "自定义…" }));
-    for (const k of BYTE_KEYS) {
-      kcSel.append(
-        el("option", { value: String(k.value), text: `${k.name} (0x${toHex(k.value)})` }),
-      );
-    }
-    kcSel.value = BYTE_KEYS.some((k) => k.value === a.keycode) ? String(a.keycode) : "";
     const kcInput = el("input", {
       type: "text",
       value: `0x${toHex(a.keycode)}`,
@@ -332,17 +349,36 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     const kcName = el("span", {
       class: "mono",
       style: "color:var(--text-dim)",
-      text: byteName(a.keycode),
+      text: actionByteName(a.keycode, a.category),
     });
+    /** 类别决定可选的键码表：鼠标动作的字节是按键位掩码，不是 HID 用途码。 */
+    const kcOptions = (): Array<[number, string]> =>
+      a.category === CAT_MOUSE ? MOUSE_BUTTONS : BYTE_KEYS.map((k) => [k.value, k.name]);
+    const fillKcOptions = (): void => {
+      kcSel.replaceChildren(el("option", { value: "", text: "自定义…" }));
+      for (const [value, name] of kcOptions()) {
+        kcSel.append(
+          el("option", { value: String(value), text: `${name} (0x${toHex(value)})` }),
+        );
+      }
+      kcSel.value = kcOptions().some(([value]) => value === a.keycode) ? String(a.keycode) : "";
+      kcName.textContent = actionByteName(a.keycode, a.category);
+    };
     const syncKc = (v: number) => {
       a.keycode = v;
+      // 键盘动作的类别由键码决定：0xE0-0xE7 必须是"修饰键"，否则按下/抬起不生效。
+      if (a.category === CAT_NORMAL || a.category === CAT_MODIFIER) {
+        a.category = keyboardCategory(v);
+        catSel.value = String(a.category);
+      }
       kcInput.value = `0x${toHex(v)}`;
       kcInput.style.borderColor = "";
-      kcSel.value = BYTE_KEYS.some((k) => k.value === v) ? String(v) : "";
-      kcName.textContent = byteName(v);
+      kcSel.value = kcOptions().some(([value]) => value === v) ? String(v) : "";
+      kcName.textContent = actionByteName(v, a.category);
       dirty = true;
       refreshCap();
     };
+    fillKcOptions();
     kcSel.onchange = () => {
       if (kcSel.value === "") {
         kcInput.focus();
@@ -392,7 +428,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
       {},
       idx,
       el("td", {}, kindSel),
-      el("td", {}, devSel),
+      el("td", {}, catSel),
       el("td", {}, delayInput),
       el("td", {}, kcSel, " ", kcInput, " ", kcName),
       ops,
@@ -417,7 +453,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     }
     macros[sel].actions.push({
       kind: e.type === "keydown" ? 0 : 1,
-      device: 0,
+      category: keyboardCategory(keycode),
       delay,
       keycode,
     });
@@ -473,7 +509,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     const addBtn = el("button", { class: "btn", text: "添加动作" });
     addBtn.disabled = recording;
     addBtn.onclick = () => {
-      m.actions.push({ kind: 0, device: 0, delay: 0, keycode: 0 });
+      m.actions.push({ kind: 0, category: CAT_NORMAL, delay: 0, keycode: 0 });
       dirty = true;
       renderAll();
     };
