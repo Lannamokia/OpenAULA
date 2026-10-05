@@ -1,0 +1,1889 @@
+{
+  "source": {
+    "uuidList": "info-BIMJ29R_.js `uuIdMap` array (11 uuids) — the keyboard SDK supported-uuid set; verified live at hub.aulacn.com via pinia store 'aula' -> st.deviceInstance.Info_Class.uuIdMap",
+    "uuidNames": "version-DcP9tp_c.js `switch(deviceId)` — obfuscator.io base64 string table decoded locally (rotation=13, index offset 0x75); cross-checked with T6() in index-ittJ_Bat.js, getBaseInfo() in info-BIMJ29R_.js and live st.deviceInfo",
+    "catalog": "index-ittJ_Bat.js static model arrays M6,k6,L6,R6,Z6,F6,N6,_6,O6,U6,G6,W6,j6,V6 (obfuscator.io string table decoded locally: rotation=246, index offset 0x1cb) — the frontend's model/descriptor table: pName,pId,vId,wireless,deviceType,usage,usagePage,supportAcc,layoutClass",
+    "layoutClassNote": "`layoutClass` is the device-class loader object variable name (e.g. o1 = the 68-key HE keyboard class), NOT a key-layout id",
+    "keyboardMapNote": "keyboardMap (181 entries, data/keyboard_map.json) is global to the SDK and shared by all models",
+    "liveRead": "hub.aulacn.com read-only via kimi-webbridge, session 'aula-reverse'",
+    "unresolvedNote": "uuIdMap 的 11 个 uuid 中, 0x110000000005 / 0x11000000000f / 0x110000000016 在前端所有 chunk 中都没有名称或机型映射 (仅出现在 uuIdMap 列表; 0x11000000000f 另出现在 sdkPage 的功能门控里)。",
+    "catalogRefNote": "catalogRef.index 指向本文件顶层 catalog 数组的下标"
+  },
+  "uuidModels": [
+    {
+      "uuid": 18691697672195,
+      "uuidHex": "0x110000000003",
+      "customName": "HERO 68 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 30
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 18691697672197,
+      "uuidHex": "0x110000000005",
+      "customName": null,
+      "pId": null,
+      "vId": null,
+      "wireless": null,
+      "deviceType": null,
+      "usage": null,
+      "usagePage": null,
+      "layoutClass": null,
+      "catalogRef": null,
+      "nameSource": null,
+      "note": "前端未提供该 uuid 的名称/机型映射 (未取得)。按集合差推断: R6 机型表里未被其他 uuid 占用的机型为 HERO 68 MINI / HERO 84 HE / HERO 87 HE, 这 3 个未命名 uuid 应即其中 (顺序未验证, 仅为推断, 勿当事实使用)",
+      "inferredCandidates": [
+        "HERO 68 MINI",
+        "HERO 84 HE",
+        "HERO 87 HE"
+      ],
+      "inferredCandidatesNote": "集合差推断, 顺序未验证"
+    },
+    {
+      "uuid": 18691697672213,
+      "uuidHex": "0x110000000015",
+      "customName": "WIN 68 HE Ultra",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 32
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 18691697672207,
+      "uuidHex": "0x11000000000f",
+      "customName": null,
+      "pId": null,
+      "vId": null,
+      "wireless": null,
+      "deviceType": null,
+      "usage": null,
+      "usagePage": null,
+      "layoutClass": null,
+      "catalogRef": null,
+      "nameSource": null,
+      "note": "前端未提供该 uuid 的名称/机型映射 (未取得)。按集合差推断: R6 机型表里未被其他 uuid 占用的机型为 HERO 68 MINI / HERO 84 HE / HERO 87 HE, 这 3 个未命名 uuid 应即其中 (顺序未验证, 仅为推断, 勿当事实使用)",
+      "inferredCandidates": [
+        "HERO 68 MINI",
+        "HERO 84 HE",
+        "HERO 87 HE"
+      ],
+      "inferredCandidatesNote": "集合差推断, 顺序未验证"
+    },
+    {
+      "uuid": 19791209299978,
+      "uuidHex": "0x12000000000a",
+      "customName": "HERO 68 AIR",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 35
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 19791209299984,
+      "uuidHex": "0x120000000010",
+      "customName": "HERO 68 XS",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 37
+      },
+      "nameSource": "live st.deviceInfo (hub.aulacn.com) + version page",
+      "liveDeviceInfo": {
+        "pId": 4158,
+        "vId": 14126,
+        "customName": "HERO 68 XS",
+        "deviceId": 19791209299984,
+        "wireless": 0,
+        "deviceType": 1,
+        "usage": 97,
+        "usagePage": 65376,
+        "binVersion": "V1.170",
+        "FnMode": "Win"
+      }
+    },
+    {
+      "uuid": 18691697672255,
+      "uuidHex": "0x11000000003f",
+      "customName": "HERO 99 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 34
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 18691697672210,
+      "uuidHex": "0x110000000012",
+      "customName": "HERO 99 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 34
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 19791209299989,
+      "uuidHex": "0x120000000015",
+      "customName": "HERO 75 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 38
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 19791209299972,
+      "uuidHex": "0x120000000004",
+      "customName": "HERO 68 MINI AIR",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "o1",
+      "catalogRef": {
+        "array": "R6",
+        "index": 39
+      },
+      "nameSource": "version-DcP9tp_c.js switch(deviceId)"
+    },
+    {
+      "uuid": 18691697672214,
+      "uuidHex": "0x110000000016",
+      "customName": null,
+      "pId": null,
+      "vId": null,
+      "wireless": null,
+      "deviceType": null,
+      "usage": null,
+      "usagePage": null,
+      "layoutClass": null,
+      "catalogRef": null,
+      "nameSource": null,
+      "note": "前端未提供该 uuid 的名称/机型映射 (未取得)。按集合差推断: R6 机型表里未被其他 uuid 占用的机型为 HERO 68 MINI / HERO 84 HE / HERO 87 HE, 这 3 个未命名 uuid 应即其中 (顺序未验证, 仅为推断, 勿当事实使用)",
+      "inferredCandidates": [
+        "HERO 68 MINI",
+        "HERO 84 HE",
+        "HERO 87 HE"
+      ],
+      "inferredCandidatesNote": "集合差推断, 顺序未验证"
+    }
+  ],
+  "catalog": [
+    {
+      "array": "M6",
+      "pName": "HERO 68 HE ULTRA",
+      "pId": 1031,
+      "vId": 7333,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "M6",
+      "pName": "HERO 68 HE PRO",
+      "pId": 1033,
+      "vId": 7333,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "M6",
+      "pName": "WIN 68 HE PRO",
+      "pId": 6401,
+      "vId": 7330,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "M6",
+      "pName": "WIN 68 HE MAX",
+      "pId": 6401,
+      "vId": 7330,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "M6",
+      "pName": "WIN 60 HE PRO",
+      "pId": 6402,
+      "vId": 7330,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "M6",
+      "pName": "WIN 60 HE MAX",
+      "pId": 6402,
+      "vId": 7330,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65440,
+      "supportAcc": 1,
+      "layoutClass": "G1"
+    },
+    {
+      "array": "k6",
+      "pName": "AG60 MAX",
+      "pId": 10450,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG60 PRO",
+      "pId": 10449,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG60",
+      "pId": 10448,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG60 PRO",
+      "pId": 10460,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG60 MAX",
+      "pId": 10461,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG75",
+      "pId": 10463,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "AG75 Ultra",
+        "AG75 MAX"
+      ],
+      "pId": 10465,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG75 PRO",
+      "pId": 10464,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG75",
+      "pId": 10480,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG75 PRO",
+      "pId": 10481,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "AG75 Ultra",
+        "AG75 MAX"
+      ],
+      "pId": 10482,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AULA 66",
+      "pId": 10499,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "GALAXY 600",
+      "pId": 10500,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "AULA60",
+        "AULA 60"
+      ],
+      "pId": 10498,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "AG63",
+      "pId": 10029,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "AG63 PRO",
+        "AG63 pro"
+      ],
+      "pId": 10028,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "AG63 PRO",
+        "AG63 pro"
+      ],
+      "pId": 65153,
+      "vId": 6790,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "F68RX",
+        "F68rx"
+      ],
+      "pId": 10030,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "WIN 60 EVO",
+      "pId": 10506,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": "WIN 68 EVO",
+      "pId": 10505,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "y0"
+    },
+    {
+      "array": "k6",
+      "pName": [
+        "BOX 63MAX",
+        "BOX 63"
+      ],
+      "pId": 10033,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "ke"
+    },
+    {
+      "array": "k6",
+      "pName": "BOX 63MAX",
+      "pId": 10087,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "ke"
+    },
+    {
+      "array": "k6",
+      "pName": "BOX 63",
+      "pId": 10032,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65456,
+      "supportAcc": 1,
+      "layoutClass": "ke"
+    },
+    {
+      "array": "L6",
+      "pName": "WIN 60 SE",
+      "pId": 10522,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "supportAcc": 0,
+      "layoutClass": "P6"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 68 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 68 MINI",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "WIN68HE Ultra",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 84 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": [
+        "HERO 99 HE",
+        "HERO 99"
+      ],
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 68 Air",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "8K Wireless Receiver",
+      "pId": 4204,
+      "vId": 14126,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "S6"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 68 XS",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "AULA HERO 75 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO68 MINI Air",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "R6",
+      "pName": "HERO 87 HE",
+      "pId": 4158,
+      "vId": 14126,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "supportAcc": 1,
+      "layoutClass": "o1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883533
+      ],
+      "pName": "Gaming Keyboard",
+      "customName": "F75",
+      "pId": 268,
+      "vId": 9610,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "supportAcc": 0,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883533
+      ],
+      "pName": "2.4G Wireless Receiver",
+      "customName": "F75",
+      "pId": 64009,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 0,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883471
+      ],
+      "pName": "Gaming Keyboard",
+      "customName": "F87",
+      "pId": 268,
+      "vId": 9610,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883471
+      ],
+      "pName": "2.4G Wireless Receiver",
+      "customName": "F87",
+      "pId": 64009,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534884323
+      ],
+      "pName": "Gaming Keyboard",
+      "customName": "F87Pro",
+      "pId": 268,
+      "vId": 9610,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534884323
+      ],
+      "pName": "2.4G Wireless Receiver",
+      "customName": "F87Pro",
+      "pId": 64009,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 2,
+      "usagePage": 65282,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883492
+      ],
+      "pName": "Gaming Keyboard",
+      "customName": "F99",
+      "pId": 268,
+      "vId": 9610,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65280,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "V6",
+      "uuid": [
+        3298534883492
+      ],
+      "pName": "2.4G Wireless Receiver",
+      "customName": "F99",
+      "pId": 64009,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 2,
+      "usagePage": 65282,
+      "layoutClass": "I1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 60 HE",
+      "pId": 32818,
+      "vId": 3141,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI60HE MAX",
+      "pId": 32929,
+      "vId": 3141,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI60HE MAX Dongle",
+      "pId": 65276,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 1,
+      "usagePage": 65408,
+      "layoutClass": "u2"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 60 HE PRO",
+      "pId": 32946,
+      "vId": 3141,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 60 HE PRO",
+      "pId": 32930,
+      "vId": 3141,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 60 HE PRO Dongle",
+      "pId": 65278,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "u2"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 68 HE",
+      "pId": 10018,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 68 HE PRO",
+      "pId": 10019,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI 68 HE PRO Dongle",
+      "pId": 65278,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "u2"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI68 HE MAX",
+      "pId": 10020,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "MINI68HE MAX Dongle",
+      "pId": 65276,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "u2"
+    },
+    {
+      "array": "Z6",
+      "pName": "AULA F75 HE",
+      "pId": 10025,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "AULA F75 HE",
+      "pId": 10070,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "AULA F75 HE",
+      "pId": 10050,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "s1"
+    },
+    {
+      "array": "Z6",
+      "pName": "AULA F75 HE Dongle",
+      "pId": 65278,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "u2"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87S 8K",
+      "pId": 10504,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "a9"
+    },
+    {
+      "array": "F6",
+      "pName": [
+        "8K Wireless Receiver",
+        "F75 Master Dongle"
+      ],
+      "pId": 65273,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376,
+      "layoutClass": "a9"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2C",
+      "pId": 10002,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2C",
+      "pId": 10040,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2C",
+      "pId": 10055,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": [
+        "AULA F87ProV2C Dongle",
+        "AULA NOVA75 Pro",
+        "F75 V2 Dongle"
+      ],
+      "pId": 65276,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2D",
+      "pId": 10001,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2D",
+      "pId": 10054,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2D",
+      "pId": 10039,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": [
+        "AULA F87ProV2D Dongle",
+        "AULA F87ProV2Z Dongle"
+      ],
+      "pId": 65278,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2Z",
+      "pId": 10000,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F87ProV2Z",
+      "pId": 10038,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F108ProV2",
+      "pId": 10041,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F108ProV2C",
+      "pId": 10042,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F108ProV2C",
+      "pId": 10057,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA F108ProV2C Dongle",
+      "pId": 65276,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "R0"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA NOVA98",
+      "pId": 10043,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "g2"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA NOVA98 Dongle",
+      "pId": 65276,
+      "vId": 3141,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 113,
+      "usagePage": 65408,
+      "layoutClass": "H6"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA NOVA98",
+      "pId": 10077,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "g2"
+    },
+    {
+      "array": "F6",
+      "pName": "AULA NOVA75 Pro",
+      "pId": 10076,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "g2"
+    },
+    {
+      "array": "F6",
+      "pName": "Epomaker x Aula F75 V2",
+      "pId": 10047,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "g2"
+    },
+    {
+      "array": "F6",
+      "pName": "F75 Master",
+      "pId": 10072,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65384,
+      "layoutClass": "g2"
+    },
+    {
+      "array": "N6",
+      "pName": "WIN 68 HE",
+      "pId": 50021,
+      "vId": 11836,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 145,
+      "usagePage": 65307,
+      "layoutClass": "o9"
+    },
+    {
+      "array": "N6",
+      "pName": "WIN 60 HE",
+      "pId": 50021,
+      "vId": 11836,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 145,
+      "usagePage": 65307,
+      "layoutClass": "o9"
+    },
+    {
+      "array": "_6",
+      "pName": "AULA-Neos75",
+      "pId": 18564,
+      "vId": 7847,
+      "wireless": 0,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376
+    },
+    {
+      "array": "_6",
+      "pName": "AULA-Neos75 dongle",
+      "pId": 34162,
+      "vId": 28006,
+      "wireless": 1,
+      "deviceType": 1,
+      "usage": 97,
+      "usagePage": 65376
+    },
+    {
+      "array": "O6",
+      "pName": "V3 Ultra B",
+      "pId": 4696,
+      "vId": 14412,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "V3 Ultra B",
+      "pId": 8802,
+      "vId": 14412,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-L9 Mouse",
+      "pId": 10487,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA Receiver",
+      "pId": 10489,
+      "vId": 14502,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1
+    },
+    {
+      "array": "O6",
+      "pName": "AULA Receiver",
+      "pId": 12058,
+      "vId": 14502,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1
+    },
+    {
+      "array": "O6",
+      "pName": "AULA Receiver",
+      "pId": 10493,
+      "vId": 14502,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-L9 Ultra Mouse",
+      "pId": 10491,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-SC800 Max Mouse",
+      "pId": 12000,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA Receiver",
+      "pId": 10473,
+      "vId": 14502,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-SC880Ultra",
+      "pId": 10495,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-SC880MAX",
+      "pId": 10471,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": [
+        "AULA-SC900V2 Ultra Mouse",
+        "AULA-SC900V2Ultra"
+      ],
+      "pId": 12020,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-SC900V2 Pro",
+      "pId": 12030,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-SC900V2 MAX",
+      "pId": 12022,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-V9Ultra+",
+      "pId": 12014,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-V9Ultra",
+      "pId": 12018,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-X9Ultra",
+      "pId": 12052,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "M0"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-X5 MAX",
+      "pId": 10472,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "p2"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-X5 Ultra",
+      "pId": 12040,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "p2"
+    },
+    {
+      "array": "O6",
+      "pName": "AULA-L5 Ultra",
+      "pId": 12044,
+      "vId": 14502,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65448,
+      "supportAcc": 1,
+      "layoutClass": "p2"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9+",
+      "pId": 8887,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9+",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9",
+      "pId": 8888,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Pro+",
+      "pId": 8887,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Pro+",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Pro",
+      "pId": 8888,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Pro",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Ultra",
+      "pId": 8888,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Ultra+",
+      "pId": 8887,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Ultra+",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Max",
+      "pId": 8888,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-V9Max+",
+      "pId": 8887,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9Ultra",
+      "pId": 8886,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-8K Dongle",
+      "pId": 8864,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9Pro",
+      "pId": 8886,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9Pro",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9",
+      "pId": 8886,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9",
+      "pId": 8890,
+      "vId": 12815,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "U6",
+      "pName": "AULA-X9Max",
+      "pId": 8886,
+      "vId": 12815,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 146,
+      "usagePage": 65308,
+      "layoutClass": "w0"
+    },
+    {
+      "array": "G6",
+      "pName": "Gaming Mouse",
+      "pId": 62737,
+      "vId": 13652,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "G6",
+      "pName": "2.4G Wireless Receiver",
+      "pId": 62933,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "G6",
+      "pName": [
+        "Gaming Mouse",
+        "2.4G Dual Mode Mouse"
+      ],
+      "pId": 64310,
+      "vId": 13652,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "G6",
+      "pName": [
+        "Lang Tu Dongle",
+        "2.4G Wireless 8K Receiver"
+      ],
+      "pId": 64309,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "G6",
+      "pName": [
+        "Axis",
+        "SAREPO"
+      ],
+      "pId": 62741,
+      "vId": 13652,
+      "wireless": 0,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "G6",
+      "pName": [
+        "Axis",
+        "SAREPO"
+      ],
+      "pId": 62743,
+      "vId": 13652,
+      "wireless": 1,
+      "deviceType": 2,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 1,
+      "layoutClass": "J1"
+    },
+    {
+      "array": "W6",
+      "pName": [
+        "G10",
+        "G10pro"
+      ],
+      "pId": 4663,
+      "vId": 13058,
+      "wireless": 0,
+      "deviceType": 3,
+      "usage": 1,
+      "usagePage": 12
+    },
+    {
+      "array": "j6",
+      "pName": "USB Composite Device",
+      "pId": "z6",
+      "vId": "J6",
+      "wireless": 0,
+      "deviceType": 5,
+      "usage": 2,
+      "usagePage": 65282,
+      "supportAcc": 0,
+      "layoutClass": "X6"
+    }
+  ]
+}

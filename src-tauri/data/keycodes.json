@@ -1,0 +1,859 @@
+{
+  "source": {
+    "primary": "tools/deobf-vendor/deobf-strings.js lines 56160-56331 (`const IM = {...}`), 170 entries",
+    "note": "SDK 内置键码表 (USB HID Usage ID 为主). 原表存在重名项 (NumpadComma 0x85/0x8C, KanaMode 0x88/0x92/0x93), 以数值为准."
+  },
+  "count": 170,
+  "keycodes": [
+    {
+      "code": "0x00000000",
+      "value": 0,
+      "name": "None"
+    },
+    {
+      "code": "0x00000001",
+      "value": 1,
+      "name": "ErrorOVF"
+    },
+    {
+      "code": "0x00000004",
+      "value": 4,
+      "name": "KeyA"
+    },
+    {
+      "code": "0x00000005",
+      "value": 5,
+      "name": "KeyB"
+    },
+    {
+      "code": "0x00000006",
+      "value": 6,
+      "name": "KeyC"
+    },
+    {
+      "code": "0x00000007",
+      "value": 7,
+      "name": "KeyD"
+    },
+    {
+      "code": "0x00000008",
+      "value": 8,
+      "name": "KeyE"
+    },
+    {
+      "code": "0x00000009",
+      "value": 9,
+      "name": "KeyF"
+    },
+    {
+      "code": "0x0000000a",
+      "value": 10,
+      "name": "KeyG"
+    },
+    {
+      "code": "0x0000000b",
+      "value": 11,
+      "name": "KeyH"
+    },
+    {
+      "code": "0x0000000c",
+      "value": 12,
+      "name": "KeyI"
+    },
+    {
+      "code": "0x0000000d",
+      "value": 13,
+      "name": "KeyJ"
+    },
+    {
+      "code": "0x0000000e",
+      "value": 14,
+      "name": "KeyK"
+    },
+    {
+      "code": "0x0000000f",
+      "value": 15,
+      "name": "KeyL"
+    },
+    {
+      "code": "0x00000010",
+      "value": 16,
+      "name": "KeyM"
+    },
+    {
+      "code": "0x00000011",
+      "value": 17,
+      "name": "KeyN"
+    },
+    {
+      "code": "0x00000012",
+      "value": 18,
+      "name": "KeyO"
+    },
+    {
+      "code": "0x00000013",
+      "value": 19,
+      "name": "KeyP"
+    },
+    {
+      "code": "0x00000014",
+      "value": 20,
+      "name": "KeyQ"
+    },
+    {
+      "code": "0x00000015",
+      "value": 21,
+      "name": "KeyR"
+    },
+    {
+      "code": "0x00000016",
+      "value": 22,
+      "name": "KeyS"
+    },
+    {
+      "code": "0x00000017",
+      "value": 23,
+      "name": "KeyT"
+    },
+    {
+      "code": "0x00000018",
+      "value": 24,
+      "name": "KeyU"
+    },
+    {
+      "code": "0x00000019",
+      "value": 25,
+      "name": "KeyV"
+    },
+    {
+      "code": "0x0000001a",
+      "value": 26,
+      "name": "KeyW"
+    },
+    {
+      "code": "0x0000001b",
+      "value": 27,
+      "name": "KeyX"
+    },
+    {
+      "code": "0x0000001c",
+      "value": 28,
+      "name": "KeyY"
+    },
+    {
+      "code": "0x0000001d",
+      "value": 29,
+      "name": "KeyZ"
+    },
+    {
+      "code": "0x0000001e",
+      "value": 30,
+      "name": "Digit1"
+    },
+    {
+      "code": "0x0000001f",
+      "value": 31,
+      "name": "Digit2"
+    },
+    {
+      "code": "0x00000020",
+      "value": 32,
+      "name": "Digit3"
+    },
+    {
+      "code": "0x00000021",
+      "value": 33,
+      "name": "Digit4"
+    },
+    {
+      "code": "0x00000022",
+      "value": 34,
+      "name": "Digit5"
+    },
+    {
+      "code": "0x00000023",
+      "value": 35,
+      "name": "Digit6"
+    },
+    {
+      "code": "0x00000024",
+      "value": 36,
+      "name": "Digit7"
+    },
+    {
+      "code": "0x00000025",
+      "value": 37,
+      "name": "Digit8"
+    },
+    {
+      "code": "0x00000026",
+      "value": 38,
+      "name": "Digit9"
+    },
+    {
+      "code": "0x00000027",
+      "value": 39,
+      "name": "Digit0"
+    },
+    {
+      "code": "0x00000028",
+      "value": 40,
+      "name": "Enter"
+    },
+    {
+      "code": "0x00000029",
+      "value": 41,
+      "name": "Escape"
+    },
+    {
+      "code": "0x0000002a",
+      "value": 42,
+      "name": "Backspace"
+    },
+    {
+      "code": "0x0000002b",
+      "value": 43,
+      "name": "Tab"
+    },
+    {
+      "code": "0x0000002c",
+      "value": 44,
+      "name": "Space"
+    },
+    {
+      "code": "0x0000002d",
+      "value": 45,
+      "name": "Minus"
+    },
+    {
+      "code": "0x0000002e",
+      "value": 46,
+      "name": "Equal"
+    },
+    {
+      "code": "0x0000002f",
+      "value": 47,
+      "name": "BracketLeft"
+    },
+    {
+      "code": "0x00000030",
+      "value": 48,
+      "name": "BracketRight"
+    },
+    {
+      "code": "0x00000031",
+      "value": 49,
+      "name": "Backslash"
+    },
+    {
+      "code": "0x00000032",
+      "value": 50,
+      "name": "IntlHash"
+    },
+    {
+      "code": "0x00000033",
+      "value": 51,
+      "name": "Semicolon"
+    },
+    {
+      "code": "0x00000034",
+      "value": 52,
+      "name": "Quote"
+    },
+    {
+      "code": "0x00000035",
+      "value": 53,
+      "name": "Backquote"
+    },
+    {
+      "code": "0x00000036",
+      "value": 54,
+      "name": "Comma"
+    },
+    {
+      "code": "0x00000037",
+      "value": 55,
+      "name": "Period"
+    },
+    {
+      "code": "0x00000038",
+      "value": 56,
+      "name": "Slash"
+    },
+    {
+      "code": "0x00000039",
+      "value": 57,
+      "name": "CapsLock"
+    },
+    {
+      "code": "0x0000003a",
+      "value": 58,
+      "name": "F1"
+    },
+    {
+      "code": "0x0000003b",
+      "value": 59,
+      "name": "F2"
+    },
+    {
+      "code": "0x0000003c",
+      "value": 60,
+      "name": "F3"
+    },
+    {
+      "code": "0x0000003d",
+      "value": 61,
+      "name": "F4"
+    },
+    {
+      "code": "0x0000003e",
+      "value": 62,
+      "name": "F5"
+    },
+    {
+      "code": "0x0000003f",
+      "value": 63,
+      "name": "F6"
+    },
+    {
+      "code": "0x00000040",
+      "value": 64,
+      "name": "F7"
+    },
+    {
+      "code": "0x00000041",
+      "value": 65,
+      "name": "F8"
+    },
+    {
+      "code": "0x00000042",
+      "value": 66,
+      "name": "F9"
+    },
+    {
+      "code": "0x00000043",
+      "value": 67,
+      "name": "F10"
+    },
+    {
+      "code": "0x00000044",
+      "value": 68,
+      "name": "F11"
+    },
+    {
+      "code": "0x00000045",
+      "value": 69,
+      "name": "F12"
+    },
+    {
+      "code": "0x00000046",
+      "value": 70,
+      "name": "PrintScreen"
+    },
+    {
+      "code": "0x00000047",
+      "value": 71,
+      "name": "ScrollLock"
+    },
+    {
+      "code": "0x00000048",
+      "value": 72,
+      "name": "Pause"
+    },
+    {
+      "code": "0x00000049",
+      "value": 73,
+      "name": "Insert"
+    },
+    {
+      "code": "0x0000004a",
+      "value": 74,
+      "name": "Home"
+    },
+    {
+      "code": "0x0000004b",
+      "value": 75,
+      "name": "PageUp"
+    },
+    {
+      "code": "0x0000004c",
+      "value": 76,
+      "name": "Delete"
+    },
+    {
+      "code": "0x0000004d",
+      "value": 77,
+      "name": "End"
+    },
+    {
+      "code": "0x0000004e",
+      "value": 78,
+      "name": "PageDown"
+    },
+    {
+      "code": "0x0000004f",
+      "value": 79,
+      "name": "ArrowRight"
+    },
+    {
+      "code": "0x00000050",
+      "value": 80,
+      "name": "ArrowLeft"
+    },
+    {
+      "code": "0x00000051",
+      "value": 81,
+      "name": "ArrowDown"
+    },
+    {
+      "code": "0x00000052",
+      "value": 82,
+      "name": "ArrowUp"
+    },
+    {
+      "code": "0x00000053",
+      "value": 83,
+      "name": "NumLock"
+    },
+    {
+      "code": "0x00000054",
+      "value": 84,
+      "name": "NumpadDivide"
+    },
+    {
+      "code": "0x00000055",
+      "value": 85,
+      "name": "NumpadMultiply"
+    },
+    {
+      "code": "0x00000056",
+      "value": 86,
+      "name": "NumpadSubtract"
+    },
+    {
+      "code": "0x00000057",
+      "value": 87,
+      "name": "NumpadAdd"
+    },
+    {
+      "code": "0x00000058",
+      "value": 88,
+      "name": "NumpadEnter"
+    },
+    {
+      "code": "0x00000059",
+      "value": 89,
+      "name": "Numpad1"
+    },
+    {
+      "code": "0x0000005a",
+      "value": 90,
+      "name": "Numpad2"
+    },
+    {
+      "code": "0x0000005b",
+      "value": 91,
+      "name": "Numpad3"
+    },
+    {
+      "code": "0x0000005c",
+      "value": 92,
+      "name": "Numpad4"
+    },
+    {
+      "code": "0x0000005d",
+      "value": 93,
+      "name": "Numpad5"
+    },
+    {
+      "code": "0x0000005e",
+      "value": 94,
+      "name": "Numpad6"
+    },
+    {
+      "code": "0x0000005f",
+      "value": 95,
+      "name": "Numpad7"
+    },
+    {
+      "code": "0x00000060",
+      "value": 96,
+      "name": "Numpad8"
+    },
+    {
+      "code": "0x00000061",
+      "value": 97,
+      "name": "Numpad9"
+    },
+    {
+      "code": "0x00000062",
+      "value": 98,
+      "name": "Numpad0"
+    },
+    {
+      "code": "0x00000063",
+      "value": 99,
+      "name": "NumpadDecimal"
+    },
+    {
+      "code": "0x00000064",
+      "value": 100,
+      "name": "IntlBackslash"
+    },
+    {
+      "code": "0x00000065",
+      "value": 101,
+      "name": "ContextMenu"
+    },
+    {
+      "code": "0x00000066",
+      "value": 102,
+      "name": "Power"
+    },
+    {
+      "code": "0x00000067",
+      "value": 103,
+      "name": "NumpadEqual"
+    },
+    {
+      "code": "0x00000068",
+      "value": 104,
+      "name": "F13"
+    },
+    {
+      "code": "0x00000069",
+      "value": 105,
+      "name": "F14"
+    },
+    {
+      "code": "0x0000006a",
+      "value": 106,
+      "name": "F15"
+    },
+    {
+      "code": "0x0000006b",
+      "value": 107,
+      "name": "F16"
+    },
+    {
+      "code": "0x0000006c",
+      "value": 108,
+      "name": "F17"
+    },
+    {
+      "code": "0x0000006d",
+      "value": 109,
+      "name": "F18"
+    },
+    {
+      "code": "0x0000006e",
+      "value": 110,
+      "name": "F19"
+    },
+    {
+      "code": "0x0000006f",
+      "value": 111,
+      "name": "F20"
+    },
+    {
+      "code": "0x00000070",
+      "value": 112,
+      "name": "F21"
+    },
+    {
+      "code": "0x00000071",
+      "value": 113,
+      "name": "F22"
+    },
+    {
+      "code": "0x00000072",
+      "value": 114,
+      "name": "F23"
+    },
+    {
+      "code": "0x00000073",
+      "value": 115,
+      "name": "F24"
+    },
+    {
+      "code": "0x00000074",
+      "value": 116,
+      "name": "Open"
+    },
+    {
+      "code": "0x00000075",
+      "value": 117,
+      "name": "Help"
+    },
+    {
+      "code": "0x00000076",
+      "value": 118,
+      "name": "Props"
+    },
+    {
+      "code": "0x00000077",
+      "value": 119,
+      "name": "Front"
+    },
+    {
+      "code": "0x00000078",
+      "value": 120,
+      "name": "Stop"
+    },
+    {
+      "code": "0x00000079",
+      "value": 121,
+      "name": "Again"
+    },
+    {
+      "code": "0x0000007a",
+      "value": 122,
+      "name": "Undo"
+    },
+    {
+      "code": "0x0000007b",
+      "value": 123,
+      "name": "Cut"
+    },
+    {
+      "code": "0x0000007c",
+      "value": 124,
+      "name": "Copy"
+    },
+    {
+      "code": "0x0000007d",
+      "value": 125,
+      "name": "Paste"
+    },
+    {
+      "code": "0x0000007e",
+      "value": 126,
+      "name": "Find"
+    },
+    {
+      "code": "0x0000007f",
+      "value": 127,
+      "name": "AudioVolumeMute"
+    },
+    {
+      "code": "0x00000080",
+      "value": 128,
+      "name": "AudioVolumeUp"
+    },
+    {
+      "code": "0x00000081",
+      "value": 129,
+      "name": "AudioVolumeDown"
+    },
+    {
+      "code": "0x00000085",
+      "value": 133,
+      "name": "NumpadComma"
+    },
+    {
+      "code": "0x00000087",
+      "value": 135,
+      "name": "IntlRo"
+    },
+    {
+      "code": "0x00000088",
+      "value": 136,
+      "name": "KanaMode"
+    },
+    {
+      "code": "0x00000089",
+      "value": 137,
+      "name": "IntlYen"
+    },
+    {
+      "code": "0x0000008a",
+      "value": 138,
+      "name": "Convert"
+    },
+    {
+      "code": "0x0000008b",
+      "value": 139,
+      "name": "NonConvert"
+    },
+    {
+      "code": "0x0000008c",
+      "value": 140,
+      "name": "NumpadComma"
+    },
+    {
+      "code": "0x00000090",
+      "value": 144,
+      "name": "Lang1"
+    },
+    {
+      "code": "0x00000091",
+      "value": 145,
+      "name": "Lang2"
+    },
+    {
+      "code": "0x00000092",
+      "value": 146,
+      "name": "KanaMode"
+    },
+    {
+      "code": "0x00000093",
+      "value": 147,
+      "name": "KanaMode"
+    },
+    {
+      "code": "0x00000094",
+      "value": 148,
+      "name": "Zenkaku"
+    },
+    {
+      "code": "0x000000b6",
+      "value": 182,
+      "name": "NumpadParenLeft"
+    },
+    {
+      "code": "0x000000b7",
+      "value": 183,
+      "name": "NumpadParenRight"
+    },
+    {
+      "code": "0x000000e0",
+      "value": 224,
+      "name": "ControlLeft"
+    },
+    {
+      "code": "0x000000e1",
+      "value": 225,
+      "name": "ShiftLeft"
+    },
+    {
+      "code": "0x000000e2",
+      "value": 226,
+      "name": "AltLeft"
+    },
+    {
+      "code": "0x000000e3",
+      "value": 227,
+      "name": "MetaLeft"
+    },
+    {
+      "code": "0x000000e4",
+      "value": 228,
+      "name": "ControlRight"
+    },
+    {
+      "code": "0x000000e5",
+      "value": 229,
+      "name": "ShiftRight"
+    },
+    {
+      "code": "0x000000e6",
+      "value": 230,
+      "name": "AltRight"
+    },
+    {
+      "code": "0x000000e7",
+      "value": 231,
+      "name": "MetaRight"
+    },
+    {
+      "code": "0x000000e8",
+      "value": 232,
+      "name": "MediaPlayPause"
+    },
+    {
+      "code": "0x000000e9",
+      "value": 233,
+      "name": "MediaStop"
+    },
+    {
+      "code": "0x000000ea",
+      "value": 234,
+      "name": "MediaTrackPrevious"
+    },
+    {
+      "code": "0x000000eb",
+      "value": 235,
+      "name": "MediaTrackNext"
+    },
+    {
+      "code": "0x000000ec",
+      "value": 236,
+      "name": "Eject"
+    },
+    {
+      "code": "0x000000ed",
+      "value": 237,
+      "name": "AudioVolumeUp"
+    },
+    {
+      "code": "0x000000ee",
+      "value": 238,
+      "name": "AudioVolumeDown"
+    },
+    {
+      "code": "0x000000ef",
+      "value": 239,
+      "name": "AudioVolumeMute"
+    },
+    {
+      "code": "0x000000f0",
+      "value": 240,
+      "name": "BrowserHome"
+    },
+    {
+      "code": "0x000000f1",
+      "value": 241,
+      "name": "BrowserBack"
+    },
+    {
+      "code": "0x000000f2",
+      "value": 242,
+      "name": "BrowserForward"
+    },
+    {
+      "code": "0x000000f3",
+      "value": 243,
+      "name": "BrowserStop"
+    },
+    {
+      "code": "0x000000f4",
+      "value": 244,
+      "name": "BrowserSearch"
+    },
+    {
+      "code": "0x000000f5",
+      "value": 245,
+      "name": "ScrollUp"
+    },
+    {
+      "code": "0x000000f6",
+      "value": 246,
+      "name": "ScrollDown"
+    },
+    {
+      "code": "0x000000f7",
+      "value": 247,
+      "name": "Edit"
+    },
+    {
+      "code": "0x000000f8",
+      "value": 248,
+      "name": "Sleep"
+    },
+    {
+      "code": "0x000000f9",
+      "value": 249,
+      "name": "WakeUp"
+    },
+    {
+      "code": "0x000000fa",
+      "value": 250,
+      "name": "BrowserRefresh"
+    },
+    {
+      "code": "0x000000fb",
+      "value": 251,
+      "name": "LaunchApp2"
+    }
+  ]
+}

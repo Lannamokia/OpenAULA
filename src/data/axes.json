@@ -1,0 +1,291 @@
+{
+  "source": {
+    "primary": "site/assets/Bytech-BANInpeY.js local array `u` @ char offset ~75785 (module export `A`). Obfuscator.io string table (base64 alphabet, rotation=28, index offset 0x190) decoded locally.",
+    "labels": "i18n key `switchName.<name>` resolved against the zh locale in index-ittJ_Bat.js; label field = the name part of the key"
+  },
+  "count": 47,
+  "axes": [
+    {
+      "label": "磁白轴",
+      "id": 0,
+      "maxTravel": 3.5,
+      "iconColor": "#757671"
+    },
+    {
+      "label": "磁玉Pro",
+      "id": 1,
+      "maxTravel": 3.4,
+      "iconColor": "#487568"
+    },
+    {
+      "label": "磁珀Pro",
+      "id": 2,
+      "maxTravel": 3.5,
+      "iconColor": "#E4CE5B"
+    },
+    {
+      "label": "天王轴电竞",
+      "id": 3,
+      "maxTravel": 3.4,
+      "iconColor": "#C68867"
+    },
+    {
+      "label": "咏春轴",
+      "id": 4,
+      "maxTravel": 3.4,
+      "iconColor": "#D980FF"
+    },
+    {
+      "label": "万磁王轴",
+      "id": 5,
+      "maxTravel": 3.4,
+      "iconColor": "#8D4438"
+    },
+    {
+      "label": "KTEK轴",
+      "id": 6,
+      "maxTravel": 3.4,
+      "iconColor": "#7E3333"
+    },
+    {
+      "label": "雷电轴",
+      "id": 7,
+      "maxTravel": 3.5,
+      "iconColor": "#033B5E"
+    },
+    {
+      "label": "黑皇轴",
+      "id": 8,
+      "maxTravel": 3.4,
+      "iconColor": "#000000"
+    },
+    {
+      "label": "天王普通轴",
+      "id": 9,
+      "maxTravel": 3.4,
+      "iconColor": "#61A1B7"
+    },
+    {
+      "label": "PG粉磁轴",
+      "id": 10,
+      "maxTravel": 3.5,
+      "iconColor": "#FF9787"
+    },
+    {
+      "label": "九紫磁轴",
+      "id": 11,
+      "maxTravel": 3.4,
+      "iconColor": "#9368FF"
+    },
+    {
+      "label": "蓝玉轴",
+      "id": 12,
+      "maxTravel": 3.7,
+      "iconColor": "#351AFF"
+    },
+    {
+      "label": "形意轴",
+      "id": 13,
+      "maxTravel": 3.4,
+      "iconColor": "#00EB0C"
+    },
+    {
+      "label": "玉皇轴",
+      "id": 14,
+      "maxTravel": 3.4,
+      "iconColor": "#3C89B9"
+    },
+    {
+      "label": "海皇轴",
+      "id": 15,
+      "maxTravel": 3.4,
+      "iconColor": "#3235FF"
+    },
+    {
+      "label": "磁玉轴",
+      "id": 16,
+      "maxTravel": 3.4,
+      "iconColor": "#35D5E1"
+    },
+    {
+      "label": "矢量轴",
+      "id": 17,
+      "maxTravel": 3.5,
+      "iconColor": "#666666"
+    },
+    {
+      "label": "蓝冰轴",
+      "id": 18,
+      "maxTravel": 3.5,
+      "iconColor": "#4D82FF"
+    },
+    {
+      "label": "万磁Gaming",
+      "id": 19,
+      "maxTravel": 3.5,
+      "iconColor": "#4D82FF"
+    },
+    {
+      "label": "冰犀轴",
+      "id": 20,
+      "maxTravel": 3.4,
+      "iconColor": "#8A8A8A"
+    },
+    {
+      "label": "星芒轴",
+      "id": 21,
+      "maxTravel": 3.4,
+      "iconColor": "#FFE225"
+    },
+    {
+      "label": "粉皇轴",
+      "id": 22,
+      "maxTravel": 3.4,
+      "iconColor": "#D96F6F"
+    },
+    {
+      "label": "凯华轴",
+      "id": 23,
+      "maxTravel": 3.4,
+      "iconColor": "#376368"
+    },
+    {
+      "label": "玉帝轴",
+      "id": 24,
+      "maxTravel": 3.4,
+      "iconColor": "#386C8D"
+    },
+    {
+      "label": "万磁王MINI轴",
+      "id": 25,
+      "maxTravel": 2.8,
+      "iconColor": "#D97E6F"
+    },
+    {
+      "label": "冰薄荷轴",
+      "id": 26,
+      "maxTravel": 3.8,
+      "iconColor": "#E6D1DF"
+    },
+    {
+      "label": "冰皇轴",
+      "id": 27,
+      "maxTravel": 3.3,
+      "iconColor": "#C5C5C5"
+    },
+    {
+      "label": "粉皇MINI轴",
+      "id": 28,
+      "maxTravel": 3,
+      "iconColor": "#FFC0C2"
+    },
+    {
+      "label": "北极磁轴",
+      "id": 29,
+      "maxTravel": 3.4,
+      "iconColor": "#CCCBC1"
+    },
+    {
+      "label": "冰皇MINI轴",
+      "id": 32,
+      "maxTravel": 3,
+      "iconColor": "#C9C9C8"
+    },
+    {
+      "label": "灰木轴",
+      "id": 37,
+      "maxTravel": 3.4,
+      "iconColor": "#AAAAAC"
+    },
+    {
+      "label": "茶皇MINI轴",
+      "id": 40,
+      "maxTravel": 3,
+      "iconColor": "#845F47"
+    },
+    {
+      "label": "紫星轴",
+      "id": 34,
+      "maxTravel": 3.5,
+      "iconColor": "#482D6D"
+    },
+    {
+      "label": "灵云轴",
+      "id": 59,
+      "maxTravel": 3.4,
+      "iconColor": "#8FD5F8"
+    },
+    {
+      "label": "雪神轴",
+      "id": 60,
+      "maxTravel": 3.3,
+      "iconColor": "#CFCFFF"
+    },
+    {
+      "label": "尼克磁轴",
+      "id": 61,
+      "maxTravel": 3.4,
+      "iconColor": "#F4CF8E"
+    },
+    {
+      "label": "冰玉轴",
+      "id": 62,
+      "maxTravel": 3.4,
+      "iconColor": "#AFF3E0"
+    },
+    {
+      "label": "荔枝轴",
+      "id": 63,
+      "maxTravel": 3.4,
+      "iconColor": "#E7514D"
+    },
+    {
+      "label": "蜜雪轴",
+      "id": 64,
+      "maxTravel": 3.4,
+      "iconColor": "#E4B2C0"
+    },
+    {
+      "label": "银磁轴",
+      "id": 65,
+      "maxTravel": 3.4,
+      "iconColor": "#45515E"
+    },
+    {
+      "label": "琉璃轴",
+      "id": 58,
+      "maxTravel": 3.5,
+      "iconColor": "#C7BBBE"
+    },
+    {
+      "label": "冰心轴",
+      "id": 74,
+      "maxTravel": 3.4,
+      "iconColor": "#B1F4F4"
+    },
+    {
+      "label": "烟云轴",
+      "id": 76,
+      "maxTravel": 3.4,
+      "iconColor": "#507F80"
+    },
+    {
+      "label": "风云轴",
+      "id": 75,
+      "maxTravel": 3.4,
+      "iconColor": "#984972"
+    },
+    {
+      "label": "白瓷MINI轴",
+      "id": 78,
+      "maxTravel": 3,
+      "iconColor": "#EFEAE2"
+    },
+    {
+      "label": "冰龙磁轴",
+      "id": 84,
+      "maxTravel": 3.4,
+      "iconColor": "#93C5FD"
+    }
+  ]
+}

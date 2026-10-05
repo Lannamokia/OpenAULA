@@ -1,0 +1,1602 @@
+{
+  "source": {
+    "primary": "hub.aulacn.com live read-only (kimi-webbridge session 'aula-reverse'): st.deviceInstance.Info_Class.keyboardMap (object, 181 entries). Fetched in batches of 40 via evaluate.",
+    "offlineFallback": "site/assets/Bytech-BANInpeY.js local object `y` @ char offset 55956 (module export `D`); same 181 entries",
+    "typeField": "type: 0=系统 / 1=Ctrl组合 / 2=Alt组合 / 3=Win组合 / 4=鼠标 / 5=媒体; 字段缺失 = 普通键",
+    "caveat": "181 条中 104 条带 x/y/width/height (本机型画布上的按键), 65 条带 type, 24 条带 icon; 另有 13 条既无 type 也无坐标 (mapKey 105-111 = K42/K45/K131-K133/K150/K151, 及 1792/4096/4608/4864/5120/5376 = Eject/Search/Back/Forward/iStop/Refresh) —— 属跨机型通用条目, 其 browserValue 为 0x0200xxxx 媒体码但源表未标 type, 保持源样不做推断"
+  },
+  "count": 181,
+  "keyboardMap": [
+    {
+      "mapKey": 1,
+      "defaultKey": "ESC",
+      "browserValue": 41,
+      "browserCode": "Escape",
+      "x": 0,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 2,
+      "defaultKey": "F1",
+      "browserValue": 58,
+      "browserCode": "F1",
+      "x": 104,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 3,
+      "defaultKey": "F2",
+      "browserValue": 59,
+      "browserCode": "F2",
+      "x": 156,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 4,
+      "defaultKey": "F3",
+      "browserValue": 60,
+      "browserCode": "F3",
+      "x": 208,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 5,
+      "defaultKey": "F4",
+      "browserValue": 61,
+      "browserCode": "F4",
+      "x": 260,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 6,
+      "defaultKey": "F5",
+      "browserValue": 62,
+      "browserCode": "F5",
+      "x": 343.5,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 7,
+      "defaultKey": "F6",
+      "browserValue": 63,
+      "browserCode": "F6",
+      "x": 395.5,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 8,
+      "defaultKey": "F7",
+      "browserValue": 64,
+      "browserCode": "F7",
+      "x": 447.5,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 9,
+      "defaultKey": "F8",
+      "browserValue": 65,
+      "browserCode": "F8",
+      "x": 499.5,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 10,
+      "defaultKey": "F9",
+      "browserValue": 66,
+      "browserCode": "F9",
+      "x": 583,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 11,
+      "defaultKey": "F10",
+      "browserValue": 67,
+      "browserCode": "F10",
+      "x": 635,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 12,
+      "defaultKey": "F11",
+      "browserValue": 68,
+      "browserCode": "F11",
+      "x": 687,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 13,
+      "defaultKey": "F12",
+      "browserValue": 69,
+      "browserCode": "F12",
+      "x": 739,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 14,
+      "defaultKey": "`~",
+      "browserValue": 53,
+      "browserCode": "Backquote",
+      "x": 0,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 15,
+      "defaultKey": "!1",
+      "browserValue": 30,
+      "browserCode": "Digit1",
+      "x": 52,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 16,
+      "defaultKey": "@2",
+      "browserValue": 31,
+      "browserCode": "Digit2",
+      "x": 104,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 17,
+      "defaultKey": "#3",
+      "browserValue": 32,
+      "browserCode": "Digit3",
+      "x": 156,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 18,
+      "defaultKey": "$4",
+      "browserValue": 33,
+      "browserCode": "Digit4",
+      "x": 208,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 19,
+      "defaultKey": "%5",
+      "browserValue": 34,
+      "browserCode": "Digit5",
+      "x": 260,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 20,
+      "defaultKey": "^6",
+      "browserValue": 35,
+      "browserCode": "Digit6",
+      "x": 312,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 21,
+      "defaultKey": "&7",
+      "browserValue": 36,
+      "browserCode": "Digit7",
+      "x": 364,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 22,
+      "defaultKey": "*8",
+      "browserValue": 37,
+      "browserCode": "Digit8",
+      "x": 416,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 23,
+      "defaultKey": "(9",
+      "browserValue": 38,
+      "browserCode": "Digit9",
+      "x": 468,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 24,
+      "defaultKey": ")0",
+      "browserValue": 39,
+      "browserCode": "Digit0",
+      "x": 520,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 25,
+      "defaultKey": "_-",
+      "browserValue": 45,
+      "browserCode": "Minus",
+      "x": 572,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 26,
+      "defaultKey": "+=",
+      "browserValue": 46,
+      "browserCode": "Equal",
+      "x": 624,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 27,
+      "defaultKey": "Back Space",
+      "browserValue": 42,
+      "browserCode": "Backspace",
+      "x": 676,
+      "y": 52,
+      "width": 111,
+      "height": 48
+    },
+    {
+      "mapKey": 28,
+      "defaultKey": "Tab",
+      "browserValue": 43,
+      "browserCode": "Tab",
+      "x": 0,
+      "y": 104,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 29,
+      "defaultKey": "Q",
+      "browserValue": 20,
+      "browserCode": "KeyQ",
+      "x": 78,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 30,
+      "defaultKey": "W",
+      "browserValue": 26,
+      "browserCode": "KeyW",
+      "x": 130,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 31,
+      "defaultKey": "E",
+      "browserValue": 8,
+      "browserCode": "KeyE",
+      "x": 182,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 32,
+      "defaultKey": "R",
+      "browserValue": 21,
+      "browserCode": "KeyR",
+      "x": 234,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 33,
+      "defaultKey": "T",
+      "browserValue": 23,
+      "browserCode": "KeyT",
+      "x": 286,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 34,
+      "defaultKey": "Y",
+      "browserValue": 28,
+      "browserCode": "KeyY",
+      "x": 338,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 35,
+      "defaultKey": "U",
+      "browserValue": 24,
+      "browserCode": "KeyU",
+      "x": 390,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 36,
+      "defaultKey": "I",
+      "browserValue": 12,
+      "browserCode": "KeyI",
+      "x": 442,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 37,
+      "defaultKey": "O",
+      "browserValue": 18,
+      "browserCode": "KeyO",
+      "x": 494,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 38,
+      "defaultKey": "P",
+      "browserValue": 19,
+      "browserCode": "KeyP",
+      "x": 546,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 39,
+      "defaultKey": "{[",
+      "browserValue": 47,
+      "browserCode": "BracketLeft",
+      "x": 598,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 40,
+      "defaultKey": "}]",
+      "browserValue": 48,
+      "browserCode": "BracketRight",
+      "x": 650,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 41,
+      "defaultKey": "|\\",
+      "browserValue": 49,
+      "browserCode": "Backslash",
+      "x": 702,
+      "y": 104,
+      "width": 85,
+      "height": 48
+    },
+    {
+      "mapKey": 42,
+      "defaultKey": "CapLc",
+      "browserValue": 57,
+      "browserCode": "CapsLock",
+      "x": 0,
+      "y": 156,
+      "width": 93,
+      "height": 48
+    },
+    {
+      "mapKey": 43,
+      "defaultKey": "A",
+      "browserValue": 4,
+      "browserCode": "KeyA",
+      "x": 97,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 44,
+      "defaultKey": "S",
+      "browserValue": 22,
+      "browserCode": "KeyS",
+      "x": 149,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 45,
+      "defaultKey": "D",
+      "browserValue": 7,
+      "browserCode": "KeyD",
+      "x": 201,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 46,
+      "defaultKey": "F",
+      "browserValue": 9,
+      "browserCode": "KeyF",
+      "x": 253,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 47,
+      "defaultKey": "G",
+      "browserValue": 10,
+      "browserCode": "KeyG",
+      "x": 305,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 48,
+      "defaultKey": "H",
+      "browserValue": 11,
+      "browserCode": "KeyH",
+      "x": 357,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 49,
+      "defaultKey": "J",
+      "browserValue": 13,
+      "browserCode": "KeyJ",
+      "x": 409,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 50,
+      "defaultKey": "K",
+      "browserValue": 14,
+      "browserCode": "KeyK",
+      "x": 461,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 51,
+      "defaultKey": "L",
+      "browserValue": 15,
+      "browserCode": "KeyL",
+      "x": 513,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 52,
+      "defaultKey": ":;",
+      "browserValue": 51,
+      "browserCode": "Semicolon",
+      "x": 565,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 53,
+      "defaultKey": "\"'",
+      "browserValue": 52,
+      "browserCode": "Quote",
+      "x": 617,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 54,
+      "defaultKey": "Enter",
+      "browserValue": 40,
+      "browserCode": "Enter",
+      "x": 669,
+      "y": 156,
+      "width": 118,
+      "height": 48
+    },
+    {
+      "mapKey": 55,
+      "defaultKey": "L-Shift",
+      "browserValue": 131072,
+      "browserCode": "ShiftLeft",
+      "x": 0,
+      "y": 208,
+      "width": 109,
+      "height": 48
+    },
+    {
+      "mapKey": 56,
+      "defaultKey": "Z",
+      "browserValue": 29,
+      "browserCode": "KeyZ",
+      "x": 113,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 57,
+      "defaultKey": "X",
+      "browserValue": 27,
+      "browserCode": "KeyX",
+      "x": 165,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 58,
+      "defaultKey": "C",
+      "browserValue": 6,
+      "browserCode": "KeyC",
+      "x": 217,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 59,
+      "defaultKey": "V",
+      "browserValue": 25,
+      "browserCode": "KeyV",
+      "x": 269,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 60,
+      "defaultKey": "B",
+      "browserValue": 5,
+      "browserCode": "KeyB",
+      "x": 321,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 61,
+      "defaultKey": "N",
+      "browserValue": 17,
+      "browserCode": "KeyN",
+      "x": 373,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 62,
+      "defaultKey": "M",
+      "browserValue": 16,
+      "browserCode": "KeyM",
+      "x": 425,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 63,
+      "defaultKey": "<,",
+      "browserValue": 54,
+      "browserCode": "Comma",
+      "x": 477,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 64,
+      "defaultKey": ">.",
+      "browserValue": 55,
+      "browserCode": "Period",
+      "x": 529,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 65,
+      "defaultKey": "?/",
+      "browserValue": 56,
+      "browserCode": "Slash",
+      "x": 581,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 66,
+      "defaultKey": "R-Shift",
+      "browserValue": 2097152,
+      "browserCode": "ShiftRight",
+      "x": 633,
+      "y": 208,
+      "width": 154,
+      "height": 48
+    },
+    {
+      "mapKey": 67,
+      "defaultKey": "L-Ctrl",
+      "browserValue": 65536,
+      "browserCode": "ControlLeft",
+      "x": 0,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 68,
+      "defaultKey": "L-Win/CMD",
+      "browserValue": 524288,
+      "browserCode": "MetaLeft",
+      "x": 78,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 69,
+      "defaultKey": "L-Alt/OPT",
+      "browserValue": 262144,
+      "browserCode": "AltLeft",
+      "x": 156,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 70,
+      "defaultKey": "Space",
+      "browserValue": 44,
+      "browserCode": "Space",
+      "x": 234,
+      "y": 260,
+      "width": 241,
+      "height": 48
+    },
+    {
+      "mapKey": 71,
+      "defaultKey": "R-Alt/CMD",
+      "browserValue": 4194304,
+      "browserCode": "AltRight",
+      "x": 479,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 72,
+      "defaultKey": "Fn",
+      "browserValue": 218103808,
+      "browserCode": "",
+      "type": 0,
+      "x": 557,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 73,
+      "defaultKey": "R-Ctrl/OPT",
+      "browserValue": 1048576,
+      "browserCode": "ControlRight",
+      "x": 713,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 74,
+      "defaultKey": "↑",
+      "browserValue": 82,
+      "browserCode": "ArrowUp",
+      "x": 844,
+      "y": 208,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 75,
+      "defaultKey": "↓",
+      "browserValue": 81,
+      "browserCode": "ArrowDown",
+      "x": 844,
+      "y": 260,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 76,
+      "defaultKey": "←",
+      "browserValue": 80,
+      "browserCode": "ArrowLeft",
+      "x": 792,
+      "y": 260,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 77,
+      "defaultKey": "→",
+      "browserValue": 79,
+      "browserCode": "ArrowRight",
+      "x": 896,
+      "y": 260,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 78,
+      "defaultKey": "NumLc",
+      "browserValue": 83,
+      "browserCode": "NumpadLock",
+      "x": 949,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 79,
+      "defaultKey": "Num /",
+      "browserValue": 84,
+      "browserCode": "NumpadDivide",
+      "x": 1001,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 80,
+      "defaultKey": "Num *",
+      "browserValue": 85,
+      "browserCode": "NumpadMultiply",
+      "x": 1053,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 81,
+      "defaultKey": "Num -",
+      "browserValue": 86,
+      "browserCode": "NumpadSubtract",
+      "x": 1105,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 82,
+      "defaultKey": "Num +",
+      "browserValue": 87,
+      "browserCode": "NumpadAdd",
+      "x": 1105,
+      "y": 105,
+      "width": 48,
+      "height": 100
+    },
+    {
+      "mapKey": 83,
+      "defaultKey": "Enter",
+      "browserValue": 88,
+      "browserCode": "NumpadEnter",
+      "x": 1105,
+      "y": 209,
+      "width": 48,
+      "height": 100
+    },
+    {
+      "mapKey": 84,
+      "defaultKey": "Num .",
+      "browserValue": 99,
+      "browserCode": "NumpadDecimal",
+      "x": 1053,
+      "y": 260,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 85,
+      "defaultKey": "Num 0",
+      "browserValue": 98,
+      "browserCode": "Numpad0",
+      "x": 949,
+      "y": 260,
+      "width": 100,
+      "height": 48
+    },
+    {
+      "mapKey": 86,
+      "defaultKey": "Num 1",
+      "browserValue": 89,
+      "browserCode": "Numpad1",
+      "x": 949,
+      "y": 209,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 87,
+      "defaultKey": "Num 2",
+      "browserValue": 90,
+      "browserCode": "Numpad2",
+      "x": 1001,
+      "y": 209,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 88,
+      "defaultKey": "Num 3",
+      "browserValue": 91,
+      "browserCode": "Numpad3",
+      "x": 1053,
+      "y": 209,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 89,
+      "defaultKey": "Num 4",
+      "browserValue": 92,
+      "browserCode": "Numpad4",
+      "x": 949,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 90,
+      "defaultKey": "Num 5",
+      "browserValue": 93,
+      "browserCode": "Numpad5",
+      "x": 1001,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 91,
+      "defaultKey": "Num 6",
+      "browserValue": 94,
+      "browserCode": "Numpad6",
+      "x": 1053,
+      "y": 156,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 92,
+      "defaultKey": "Num 7",
+      "browserValue": 95,
+      "browserCode": "Numpad7",
+      "x": 949,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 93,
+      "defaultKey": "Num 8",
+      "browserValue": 96,
+      "browserCode": "Numpad8",
+      "x": 1001,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 94,
+      "defaultKey": "Num 9",
+      "browserValue": 97,
+      "browserCode": "Numpad9",
+      "x": 1053,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 95,
+      "defaultKey": "PrtSc",
+      "browserValue": 70,
+      "browserCode": "PrintScreen",
+      "x": 792,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 96,
+      "defaultKey": "ScrLc",
+      "browserValue": 71,
+      "browserCode": "ScrollLock",
+      "x": 844,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 97,
+      "defaultKey": "Pause",
+      "browserValue": 72,
+      "browserCode": "Pause",
+      "x": 896,
+      "y": 0,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 98,
+      "defaultKey": "Insert",
+      "browserValue": 73,
+      "browserCode": "Insert",
+      "x": 792,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 99,
+      "defaultKey": "Del",
+      "browserValue": 76,
+      "browserCode": "Delete",
+      "x": 792,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 100,
+      "defaultKey": "Home",
+      "browserValue": 74,
+      "browserCode": "Home",
+      "x": 844,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 101,
+      "defaultKey": "End",
+      "browserValue": 77,
+      "browserCode": "End",
+      "x": 844,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 102,
+      "defaultKey": "PgUp",
+      "browserValue": 75,
+      "browserCode": "PageUp",
+      "x": 896,
+      "y": 52,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 103,
+      "defaultKey": "PgDn",
+      "browserValue": 78,
+      "browserCode": "PageDown",
+      "x": 896,
+      "y": 104,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "mapKey": 104,
+      "defaultKey": "Menu",
+      "browserValue": 101,
+      "browserCode": "ContextMenu",
+      "x": 635,
+      "y": 260,
+      "width": 74,
+      "height": 48
+    },
+    {
+      "mapKey": 105,
+      "defaultKey": "K45",
+      "browserValue": 100,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 106,
+      "defaultKey": "K131",
+      "browserValue": 139,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 107,
+      "defaultKey": "K132",
+      "browserValue": 138,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 108,
+      "defaultKey": "K133",
+      "browserValue": 143,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 109,
+      "defaultKey": "K151",
+      "browserValue": 144,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 110,
+      "defaultKey": "K150",
+      "browserValue": 145,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 111,
+      "defaultKey": "K42",
+      "browserValue": 50,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 256,
+      "defaultKey": "屏幕亮度+",
+      "browserValue": 33554543,
+      "browserCode": "",
+      "type": 0,
+      "icon": "lightAdd"
+    },
+    {
+      "mapKey": 512,
+      "defaultKey": "屏幕亮度-",
+      "browserValue": 33554544,
+      "browserCode": "",
+      "type": 0,
+      "icon": "lightSub"
+    },
+    {
+      "mapKey": 1024,
+      "defaultKey": "下一首歌键",
+      "browserValue": 33554613,
+      "browserCode": "",
+      "type": 5,
+      "icon": "nextTrack"
+    },
+    {
+      "mapKey": 1280,
+      "defaultKey": "上一首歌键",
+      "browserValue": 33554614,
+      "browserCode": "",
+      "type": 5,
+      "icon": "previous"
+    },
+    {
+      "mapKey": 1536,
+      "defaultKey": "暂停键",
+      "browserValue": 33554615,
+      "browserCode": "",
+      "type": 5,
+      "icon": "stop"
+    },
+    {
+      "mapKey": 1792,
+      "defaultKey": "Eject",
+      "browserValue": 33554616,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 2048,
+      "defaultKey": "播放/暂停键",
+      "browserValue": 33554637,
+      "browserCode": "",
+      "type": 5,
+      "icon": "play"
+    },
+    {
+      "mapKey": 2304,
+      "defaultKey": "静音键",
+      "browserValue": 33554658,
+      "browserCode": "",
+      "type": 5,
+      "icon": "mute"
+    },
+    {
+      "mapKey": 2560,
+      "defaultKey": "音量增加键",
+      "browserValue": 33554665,
+      "browserCode": "",
+      "type": 5,
+      "icon": "volAdd"
+    },
+    {
+      "mapKey": 2816,
+      "defaultKey": "音量减少键",
+      "browserValue": 33554666,
+      "browserCode": "",
+      "type": 5,
+      "icon": "volSub"
+    },
+    {
+      "mapKey": 3072,
+      "defaultKey": "系统多媒体键",
+      "browserValue": 33554819,
+      "browserCode": "",
+      "type": 5,
+      "icon": "media"
+    },
+    {
+      "mapKey": 3328,
+      "defaultKey": "电子邮件",
+      "browserValue": 33554826,
+      "browserCode": "",
+      "type": 0,
+      "icon": "email"
+    },
+    {
+      "mapKey": 3584,
+      "defaultKey": "计算器",
+      "browserValue": 33554834,
+      "browserCode": "",
+      "type": 0,
+      "icon": "calc"
+    },
+    {
+      "mapKey": 3840,
+      "defaultKey": "我的电脑",
+      "browserValue": 33554836,
+      "browserCode": "",
+      "type": 0,
+      "icon": "myCompute"
+    },
+    {
+      "mapKey": 4096,
+      "defaultKey": "Search",
+      "browserValue": 33554977,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 4352,
+      "defaultKey": "浏览器",
+      "browserValue": 33554979,
+      "browserCode": "",
+      "type": 0,
+      "icon": "www"
+    },
+    {
+      "mapKey": 4608,
+      "defaultKey": "Back",
+      "browserValue": 33554980,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 4864,
+      "defaultKey": "Forward",
+      "browserValue": 33554981,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 5120,
+      "defaultKey": "iStop",
+      "browserValue": 33554982,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 5376,
+      "defaultKey": "Refresh",
+      "browserValue": 33554983,
+      "browserCode": ""
+    },
+    {
+      "mapKey": 5632,
+      "defaultKey": "收藏夹",
+      "browserValue": 33554986,
+      "browserCode": "",
+      "type": 0,
+      "icon": "favorite"
+    },
+    {
+      "mapKey": 32768,
+      "defaultKey": "Win+L",
+      "browserValue": 524303,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 32769,
+      "defaultKey": "Win+D",
+      "browserValue": 526080,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 65577,
+      "defaultKey": "Ctrl+ESC",
+      "browserValue": 65577,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 66560,
+      "defaultKey": "Ctrl+A",
+      "browserValue": 66560,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 67072,
+      "defaultKey": "Ctrl+C",
+      "browserValue": 67072,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 67840,
+      "defaultKey": "Ctrl+F",
+      "browserValue": 67840,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 69888,
+      "defaultKey": "Ctrl+N",
+      "browserValue": 69888,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 70144,
+      "defaultKey": "Ctrl+O",
+      "browserValue": 70144,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 71168,
+      "defaultKey": "Ctrl+S",
+      "browserValue": 71168,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 71424,
+      "defaultKey": "Ctrl+T",
+      "browserValue": 71424,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 71936,
+      "defaultKey": "Ctrl+V",
+      "browserValue": 71936,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 72192,
+      "defaultKey": "Ctrl+W",
+      "browserValue": 72192,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 72448,
+      "defaultKey": "Ctrl+X",
+      "browserValue": 72448,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 72704,
+      "defaultKey": "Ctrl+Y",
+      "browserValue": 72704,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 72960,
+      "defaultKey": "Ctrl+Z",
+      "browserValue": 72960,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 75520,
+      "defaultKey": "Ctrl+0",
+      "browserValue": 75520,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 77056,
+      "defaultKey": "缩小",
+      "browserValue": 77056,
+      "browserCode": "",
+      "type": 0,
+      "icon": "zoomOut"
+    },
+    {
+      "mapKey": 77312,
+      "defaultKey": "放大",
+      "browserValue": 77312,
+      "browserCode": "",
+      "type": 0,
+      "icon": "zoomIn"
+    },
+    {
+      "mapKey": 78592,
+      "defaultKey": "Ctrl+;",
+      "browserValue": 78592,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 79616,
+      "defaultKey": "Ctrl+.",
+      "browserValue": 79616,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 207104,
+      "defaultKey": "Ctrl+Shift+Esc",
+      "browserValue": 207104,
+      "browserCode": "",
+      "type": 1
+    },
+    {
+      "mapKey": 272640,
+      "defaultKey": "Alt+ESC",
+      "browserValue": 272640,
+      "browserCode": "",
+      "type": 2
+    },
+    {
+      "mapKey": 273152,
+      "defaultKey": "Alt+Tab",
+      "browserValue": 273152,
+      "browserCode": "",
+      "type": 2
+    },
+    {
+      "mapKey": 277760,
+      "defaultKey": "Alt+F4",
+      "browserValue": 277760,
+      "browserCode": "",
+      "type": 2
+    },
+    {
+      "mapKey": 282368,
+      "defaultKey": "A+→",
+      "browserValue": 282368,
+      "browserCode": "",
+      "type": 2
+    },
+    {
+      "mapKey": 282624,
+      "defaultKey": "A+←",
+      "browserValue": 282624,
+      "browserCode": "",
+      "type": 2
+    },
+    {
+      "mapKey": 347136,
+      "defaultKey": "任务管理器",
+      "browserValue": 347136,
+      "browserCode": "",
+      "type": 0,
+      "icon": "taskManager"
+    },
+    {
+      "mapKey": 524295,
+      "defaultKey": "显示桌面",
+      "browserValue": 524295,
+      "browserCode": "",
+      "type": 0,
+      "icon": "showDesktop"
+    },
+    {
+      "mapKey": 525312,
+      "defaultKey": "Win+A",
+      "browserValue": 525312,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 525568,
+      "defaultKey": "Win+B",
+      "browserValue": 525568,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 526336,
+      "defaultKey": "Win+E",
+      "browserValue": 526336,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 526848,
+      "defaultKey": "Win+G",
+      "browserValue": 526848,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 527360,
+      "defaultKey": "Win+I",
+      "browserValue": 527360,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 527872,
+      "defaultKey": "Win+K",
+      "browserValue": 527872,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 529664,
+      "defaultKey": "Win+R",
+      "browserValue": 529664,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 529920,
+      "defaultKey": "Win+S",
+      "browserValue": 529920,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 530176,
+      "defaultKey": "Win+T",
+      "browserValue": 530176,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 530432,
+      "defaultKey": "Win+U",
+      "browserValue": 530432,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 531200,
+      "defaultKey": "Win+X",
+      "browserValue": 531200,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 535296,
+      "defaultKey": "Win+tab",
+      "browserValue": 535296,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 536064,
+      "defaultKey": "Win+=",
+      "browserValue": 536064,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 538368,
+      "defaultKey": "Win+.",
+      "browserValue": 538368,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 612352,
+      "defaultKey": "Win+Ctrl+NumEnter",
+      "browserValue": 612352,
+      "browserCode": "",
+      "type": 3
+    },
+    {
+      "mapKey": 16843008,
+      "defaultKey": "左键点击",
+      "browserValue": 16843008,
+      "browserCode": "MouseLeft",
+      "type": 4,
+      "icon": "mouseLeft"
+    },
+    {
+      "mapKey": 16908544,
+      "defaultKey": "右键点击",
+      "browserValue": 16908544,
+      "browserCode": "MouseRight",
+      "type": 4,
+      "icon": "mouseRight"
+    },
+    {
+      "mapKey": 16974080,
+      "defaultKey": "滚轮点击",
+      "browserValue": 16974080,
+      "browserCode": "MouseCenter",
+      "type": 4,
+      "icon": "mouseCenter"
+    },
+    {
+      "mapKey": 17039616,
+      "defaultKey": "后退",
+      "browserValue": 17039616,
+      "browserCode": "MouseBack",
+      "type": 4,
+      "icon": "mouseBack"
+    },
+    {
+      "mapKey": 17105152,
+      "defaultKey": "前进",
+      "browserValue": 17105152,
+      "browserCode": "MouseForward",
+      "type": 4,
+      "icon": "mouseForward"
+    },
+    {
+      "mapKey": 218169344,
+      "defaultKey": "Fn1",
+      "browserValue": 218169344,
+      "browserCode": "",
+      "type": 0
+    }
+  ]
+}

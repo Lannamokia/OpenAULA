@@ -1,0 +1,21 @@
+{
+  "name": "aula-driver",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Unofficial driver for AULA HERO 68 XS keyboards (Tauri v2 + Rust + Vite/TS). Protocol ported from the spiderdriver reverse-engineering project.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.5.0"
+  }
+}

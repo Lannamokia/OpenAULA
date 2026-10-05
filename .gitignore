@@ -1,0 +1,20 @@
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+Cargo.lock.bak
+
+# Node
+node_modules/
+dist/
+src-tauri/gen/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
