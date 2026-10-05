@@ -28,13 +28,15 @@ const DEFAULT_TRAVEL_MM = 3.4;
 const MIN_TRAVEL_MM = 0.1;
 const MAX_DEAD_ZONE_MM = 0.5;
 
-/** 每轮取包的窗口：0 = 非阻塞，取走读线程已经排队的全部报文。
- *  Rust 侧有一条专用读线程在后台阻塞收包（设备推一条就入队一条），前端取包这一侧只写内存 map、
- *  再登记一次绘制，取包频率由设备回报率决定，不受 Windows 计时器粒度（~15.6ms）限制
- *  ——旧的 12ms 定时窗口实测就只有 ~64 次/秒。绘制走 rAF（每显示帧一次），画得再慢也不影响取包。 */
+/** 每轮取包的窗口：0 = 非阻塞，取走读线程已经排队的全部报文。 */
 const TRAVEL_WINDOW_MS = 0;
-/** 行程监测流不重发就停流，但没必要每轮都重发，按这个间隔兜一次即可。 */
-const MON_REARM_MS = 500;
+/**
+ * `0x98/0x01` **不是流，是一次快照**：每发一次 Start，设备只回一条含所有被监测键的报文，
+ * 然后彻底安静（实测：不重发就只有最初那 3 条，之后 3 秒一条都没有）。
+ * 所以"重发"就是采样本身，刷新率 = 重发频率 —— 早期设成 500ms 就是那 500ms 的延迟来源。
+ * 设备实测能吃 1000 次/秒（3 键约 3000 条/秒、0 空档），这里每一轮 UI tick 都重发。
+ */
+const MON_REARM_MS = 0;
 const CAL_REPLAY_MS = 800;
 /** 同 TRAVEL_WINDOW_MS：0 = 非阻塞取队列。 */
 const CAL_WINDOW_MS = 0;
@@ -826,7 +828,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     if (testBusy || !testOn) return;
     testBusy = true;
     try {
-      // 设备不重发就停流，所以每隔 MON_REARM_MS 重新起一次流；其余轮次只是收包。
+      // 0x98/0x01 是"一次快照"而不是流：每轮都必须重发，刷新率就等于重发频率。
       const now = Date.now();
       const ids = monitoredIds();
       const needArm = now - lastArmAt >= MON_REARM_MS;
