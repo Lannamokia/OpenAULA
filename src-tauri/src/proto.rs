@@ -209,15 +209,40 @@ pub fn reassemble(parts: &std::collections::BTreeMap<u8, Vec<u8>>) -> Option<[u8
     Some(pkt)
 }
 
-/// Whether an application packet is an async event (not a request reply).
+/// Whether an application packet is an async report (not a reply to a request).
+///
+/// `0xFE` / `0x94` use the short 2-byte event header, but the **`0x98` travel
+/// monitor stream is a normal 63-byte envelope packet with `param = 1`** whose
+/// checksum validates like any other (`Read = 1`; `Start = 0`, `Stop = 2`).
+/// See the measurement note in `docs/commands.md` §11.3.
 pub fn is_event(app: &[u8]) -> bool {
     if app.is_empty() || !EVENT_CMD.contains(&app[0]) {
         return false;
     }
     match app[0] {
-        0x98 => app[1] == 0,
+        0x98 => app[1] == 1,
         0x94 => app[1] == 2,
         _ => true, // 0xFE: any param
+    }
+}
+
+/// Data area of an event packet.
+///
+/// `0x98` (travel monitor) and `0x94/param=2` (calibration progress) both arrive
+/// as **normal 63-byte envelope packets** — `[5]` = length, data at `[6]`, with a
+/// valid application checksum. Only `0xFE` uses the short 2-byte head.
+///
+/// (Measured 2026-10-06: `94 02 00 01 00 06 | 00 01 85 68 05 65 | …` — envelope.)
+pub fn event_data(app: &[u8]) -> &[u8] {
+    if app.len() < 2 {
+        return &[];
+    }
+    match app[0] {
+        0x98 | 0x94 => {
+            let n = (app[5] as usize).min(app.len().saturating_sub(6));
+            &app[6..6 + n]
+        }
+        _ => &app[2..],
     }
 }
 
@@ -239,5 +264,50 @@ pub fn event_name(cmd: u8, param: u8) -> Option<&'static str> {
         Some("KeyCalibration")
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn travel_and_calibration_use_the_envelope() {
+        // Real captures (2026-10-06, wired HERO 68 XS).
+        // 0x94/param=2 calibration: 94 02 00 01 00 06 | 00 01 85 68 05 65
+        let mut cal = [0u8; PACKET_SIZE];
+        cal[..12].copy_from_slice(&[
+            0x94, 0x02, 0x00, 0x01, 0x00, 0x06, 0x00, 0x01, 0x85, 0x68, 0x05, 0x65,
+        ]);
+        assert!(is_event(&cal));
+        assert_eq!(event_data(&cal), &[0x00, 0x01, 0x85, 0x68, 0x05, 0x65]);
+
+        // 0x98 travel monitor: 98 01 00 01 00 06 | 00 36 00 00 25 d8
+        let mut trav = [0u8; PACKET_SIZE];
+        trav[..12].copy_from_slice(&[
+            0x98, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0x36, 0x00, 0x00, 0x25, 0xd8,
+        ]);
+        assert!(is_event(&trav));
+        assert_eq!(event_data(&trav), &[0x00, 0x36, 0x00, 0x00, 0x25, 0xd8]);
+    }
+
+    #[test]
+    fn battery_event_keeps_the_short_head() {
+        // Frame capture: fe 05 61 10 …  → data starts at offset 2.
+        let mut ev = [0u8; PACKET_SIZE];
+        ev[..5].copy_from_slice(&[0xFE, 0x05, 0x61, 0x10, 0x00]);
+        assert!(is_event(&ev));
+        // 0xFE keeps the short head, so the data slice runs to the end of the packet.
+        assert_eq!(&event_data(&ev)[..3], &[0x61, 0x10, 0x00]);
+    }
+
+    #[test]
+    fn replies_are_not_events() {
+        // The empty reply to a 0x98/0x01 Start has param 2 territory only for
+        // calibration; a travel Start reply (param 1) IS indistinguishable from the
+        // stream by design, which is why Start must be fire-and-forget.
+        let mut reply = [0u8; PACKET_SIZE];
+        reply[..6].copy_from_slice(&[0x98, 0x02, 0x00, 0x01, 0x00, 0x00]);
+        assert!(!is_event(&reply));
     }
 }

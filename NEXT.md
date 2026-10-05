@@ -1,0 +1,104 @@
+# 待办与交接笔记
+
+> 当前进度见 `README.md` 的功能状态表；协议细节见父项目 `docs/commands.md`、`docs/keycodes.md`。
+> 参考实现（Python，真机验证）：`../tools/aula_hid.py`。
+
+## 已全部完成（2026-10-06）
+
+| 功能 | Rust | 前端 | 真机验证 |
+|---|---|---|---|
+| 灯光：四灯区读写 + 模式网格 + OFF/ON 开关 | `src-tauri/src/lighting.rs` | `src/pages/lighting.ts` | ✅ 写-读回-还原 |
+| 灯光：自定义区持久化 | `0x06/0` `0x86/0` | 每键改色卡 | ✅ 单 id 写-读回-还原 |
+| 宏：整段读/写/解析/构建 | `src-tauri/src/macros.rs` | `src/pages/macros.ts` | ✅ 写 1 条 → 读回一致 → 清空 |
+| 高级键：七类型读写删 | `src-tauri/src/advanced.rs` | `src/pages/advanced.ts` | ✅ TGL 写 → 读回 → 列表 → 删 |
+| 改键：三层 + 7 类键码 + 宏绑定 + 高级键标记 | — | `src/pages/keymap.ts` | ✅ 宏绑定 keycode 写读回 |
+| 配置：读/切/改名 | `service.rs` | `src/pages/profiles.ts` | ✅ 写名 → 读回 → 长度 0 清空 |
+| 磁轴：行程/RT/死区/轴体/AD 范围 | `src-tauri/src/trigger.rs` | `src/pages/trigger.ts` | ✅ 写-读回-还原；行程流实测 |
+| 设备级开关（OS/休眠/Win锁/回报率/…） | `src-tauri/src/settings.rs` | `src/pages/settings.ts` | ✅ 抽验（Win 键锁定） |
+| 神光同步：音频频谱 + 主题色 | `src-tauri/src/music.rs` | `src/pages/music.ts` | ✅ 回环采集实测（见下） |
+
+## 读取路径 = 常驻读线程（别改回去）
+
+厂商网页用 WebHID `inputreport` 事件（push），所以不受轮询限制。驱动的等价物是：
+**第二个 HID 句柄 + 常驻读线程 + mpsc 队列**，主线程只写、从队列取。
+
+| 方式 | 刷新率 | 行程流样本 |
+|---|---|---|
+| 200ms 窗口轮询（最初写法） | 4.9 次/秒 | 2 条/秒 |
+| 12ms 窗口轮询（上一版） | 64 次/秒 | 51 条/秒 |
+| **读线程 + 非阻塞取队列（现在）** | 不设上限（前端自调度） | **2880 条/秒** |
+
+关键点：Windows 上 `WaitForSingleObject` **带超时**会被量化到 ~15.6ms 系统计时器粒度，
+所以"轮询式 `read_timeout`"天然卡 64Hz 且会丢包；而**阻塞读**在数据到达时由 IRP 完成事件
+立即唤醒，不受量化影响。`READER_IDLE_MS`（100ms）只决定空闲多久检查一次停止标志。
+
+`AulaDevice` 的 `Drop` 会置停止标志并 `join` 读线程，确保 `close_device` 后句柄真的释放
+（否则设备一直开着）。读线程连续 5 次 IO 错误才退出，避免瞬时错误让读取永久失效。
+
+**队列是有界的（4096 条，丢最旧）**，不是无界 channel。原因：窗口最小化/被遮挡时，
+Chromium/WebView2 会把 `setTimeout` 节流到 ~1 次/秒、`requestAnimationFrame` 直接停摆，
+前端几乎停止取包，而设备仍在 ~3000 条/秒地发——无界队列会以百 MB/10 分钟的速度涨。
+`AulaDevice::dropped_reports()` 暴露丢包数，行程测试卡片里每 500ms 显示一次「丢包 N」。
+
+### 绘制路径 = rAF + 脏检查
+
+**取包与绘制分离**：取包循环（`setTimeout(…, 0)`）只写内存 map，**一碰 DOM 都不碰**；
+绘制统一走 `schedulePaint()`（`requestAnimationFrame` 门闩，同一帧内同一函数只画一次），
+所以**绘制帧率自动等于显示器刷新率**（60/120/144Hz）。每张卡标题里有实测帧率读数。
+
+每个键（行程进度、校准染色）都记一个"上次画过的签名"，签名没变就完全不动 DOM
+——实测数值恒定的 3 秒内 `MutationObserver` 记录到 **0 次 DOM 变更**。
+
+### 神光同步的架构（重要）
+**Rust 侧不碰 HID**：`music.rs` 只做「WASAPI 回环采集 → FFT → 频段能量 → 键颜色帧」，
+前端按刷新率调 `music_frame(gain)` 拿帧、再走已验证的 `set_key_colors`（`0x08/1`）下发。
+这样避免后台线程争用设备 Mutex，也避免重复打开 HID 句柄。
+
+- 采集：拿默认 Render 端点却用 `Direction::Capture` 初始化 —— `wasapi` crate 据此自动加
+  `AUDCLNT_STREAMFLAGS_LOOPBACK`，读到的是系统正在播放的声音。
+- 参数：2048 点 Hann 窗 / hop 1024，12 段对数分布（40 Hz..16 kHz），快攻慢放平滑，dB 归一到 0..1。
+- 映射：按 `data/layout68.json` 的 `col` 分 15 列，`band_idx = j*n/cols`，HSL 240°→165°→0°，能量 <0.02 熄灭。
+- 主题色：`HKCU\Software\Microsoft\Windows\DWM\AccentColor`（DWORD = **ABGR**，需反转）。
+- 独立验证（2026-10-06）：播放 `C:\Windows\Media\Alarm01.wav` 时 `frames` 55→337、`peak` ≈0.5、
+  各频段随声音起伏，`music_frame` 出 68 键 / 61 键点亮 / 10 种颜色；`music_stop` 后 `running=false`。
+
+## 尚未验证 / 已知限制
+
+1. **无双设备**：8K 无线链路（`0x66` 分帧 + 逐帧 ACK）在 Rust 侧仍未复测（只有有线 `0x103E` 可用）。
+   `*ByWireless` 裸报文（灯光流式通道）同样未测。
+2. **多包写**：键位/宏的多包写已在宏上走通；键位单包为主，未专门压多包。
+3. **`0x86/0` 批量读固件有 bug**：一次请求多个 id 返回错位（详见 `docs/commands.md` §4.1 的对照表），
+   驱动里已改成**逐个读**并校验回显 id。
+4. **DKS 的 `triggers` 4 字节 / SOCD 的 `response_mode`**：UI 允许填，但固件对取值的接受范围未实测。
+5. **神光同步未在真机上下发验证**：音频侧证实有效，但「30 fps 连续刷灯」对键盘的实际吞吐/丢包未测；
+   建议先用低刷新率（10-15 fps）试，再逐步提高。
+6. **Logo / 灯箱灯区**：本机型不存在（写入被 ACK 但读回不变），能力块也不报告。
+7. **轴体校准**：`0x94/0x00` 起 / `0x94/0x04` 停；**必须每 1 秒重发 Start**，进度由
+   `0x94/param=2` 持续上报（实测 15 秒 242 条，63 字节信封 + 6 字节/条）。进/出校准的
+   全键底色与「按过变绿」由固件自己控制，主机命令管不了。见 `docs/commands.md` §11.4。
+8. **行程监测流（`0x98`）的坑已摸清**（真机实测，早先文档写错过）：
+   - `param 0` = 监测设备自选集合；`param 1` + `BE16 id…`（≤28 个）= **只监测这些键**，推荐；
+     `param 2` = 停止。
+   - 流本身是**标准 63 字节信封包、param = 1**（校验同样满足 `≡ 0xF6`），不是 2 字节事件头。
+   - **必须约每秒重发 Start，否则停流**；且重发要「发了就走」——流的包和应答长得一样，
+     等待应答会白等一个超时并把样本全丢掉（`AulaDevice::send_packet` 就是干这个的）。
+   - UI 侧每次轮询调 `poll_travel_monitor(ids, timeout)`，一次完成「重发 + 收样本」。
+9. **磁轴键程/RT/死区/轴体的写路径已实测**（读原位 → 写 → 读回 → 还原）：行程、RT
+   （enable/press/release）、死区（top/bottom/enable）全部逐字段一致；设备级开关用 Win 键锁定抽验通过。
+
+## 纪律（别忘）
+
+- **新增 `#[tauri::command]` 必须同时在 `src-tauri/src/main.rs` 的 `generate_handler!` 里注册**，
+  否则前端只会给你一句 `Command xxx not found`（本项目踩过一次：`poll_travel_monitor`）。
+  自查（`d.txt` 里剩下的就是漏注册的；`settings.rs` 的 `setter!` 宏生成项不在其中，属正常）：
+
+  ```bash
+  cd src-tauri/src
+  grep -rh -A1 "^#\[tauri::command\]" *.rs | grep -o "pub fn [a-z_0-9]*" | sed 's/pub fn //' | sort -u > /tmp/d.txt
+  grep -o "[a-z_0-9]*::[a-z_0-9]*," main.rs | sed 's/.*:://;s/,//' | sort -u > /tmp/r.txt
+  comm -23 /tmp/d.txt /tmp/r.txt
+  ```
+- **写宏前必须整段读**：设备会把「本次写入长度之外」的区域置成 `0xff`。驱动里 `read_macros` +
+  `write_macro_set` 已经强制整段往返，但**不要绕过它去手搓 `0x05`**。
+- 任何写操作按「读原值 → 写 → 读回校验 → 还原」做。
+- `dataLength`（包内 `[5]`）对读命令不可靠（`0x92` 列表和 `0x9A` 命名是例外，它们的 `[5]` 可信）。

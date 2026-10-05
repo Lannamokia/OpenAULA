@@ -73,6 +73,18 @@ impl Hid {
         Ok((dev, desc))
     }
 
+    /// Open an already-enumerated path **without** re-scanning the device list.
+    ///
+    /// Used to hand a second handle to `AulaDevice`'s reader thread: the path
+    /// comes from the descriptor of the handle already open, so there is no
+    /// reason to re-enumerate (and re-enumeration could miss the device while
+    /// it is mid-reconfigure) — `hidapi` opens with `FILE_SHARE_READ |
+    /// FILE_SHARE_WRITE`, so both handles can coexist.
+    pub fn open_raw(&self, path: &str) -> Result<HidDevice, String> {
+        let cpath = std::ffi::CString::new(path).map_err(|e| e.to_string())?;
+        self.api.open_path(&cpath).map_err(|e| e.to_string())
+    }
+
     /// Open a specific configuration interface by its enumerated path.
     pub fn open_path(&self, path: &str) -> Result<(HidDevice, DeviceDesc), String> {
         let info = self

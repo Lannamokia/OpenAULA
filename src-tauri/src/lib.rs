@@ -1,4 +1,10 @@
+pub mod advanced;
 pub mod commands;
 pub mod hid;
+pub mod lighting;
+pub mod macros;
+pub mod music;
 pub mod proto;
 pub mod service;
+pub mod settings;
+pub mod trigger;

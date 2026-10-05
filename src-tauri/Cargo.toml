@@ -19,6 +19,10 @@ tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 hidapi = "2"
+# 神光同步：WASAPI 回环采集（系统输出）+ FFT + Windows 主题色注册表读取。
+wasapi = "0.25"
+rustfft = "6"
+winreg = "0.55"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

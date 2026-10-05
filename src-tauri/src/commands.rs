@@ -24,7 +24,7 @@ fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, String> {
         .collect()
 }
 
-fn with_device<T>(
+pub(crate) fn with_device<T>(
     state: &tauri::State<'_, AppState>,
     f: impl FnOnce(&AulaDevice) -> Result<T, String>,
 ) -> Result<T, String> {
@@ -52,8 +52,17 @@ pub fn open_device(state: tauri::State<'_, AppState>, path: Option<String>) -> R
         Some(p) => hid_guard.as_ref().unwrap().open_path(p)?,
         None => hid_guard.as_ref().unwrap().open(None)?,
     };
+    // Second handle for the reader thread. `hidapi` opens the interface with
+    // FILE_SHARE_READ | FILE_SHARE_WRITE, so the write handle stays usable.
+    // No silent fallback to polling: a reader thread that cannot read would
+    // look like a device that never answers.
+    let reader = hid_guard
+        .as_ref()
+        .unwrap()
+        .open_raw(&desc.path)
+        .map_err(|e| format!("无法打开读取句柄（{}）：{e}", desc.path))?;
     drop(hid_guard);
-    let aula = AulaDevice::new(dev, desc.clone());
+    let aula = AulaDevice::new(dev, reader, desc.clone());
     *state.device.lock().map_err(|e| e.to_string())? = Some(aula);
     Ok(desc)
 }
@@ -124,6 +133,25 @@ pub fn switch_profile(state: tauri::State<'_, AppState>, n: u8) -> Result<(), St
     with_device(&state, |d| d.switch_profile(n))
 }
 
+/// `0x9A/<profile>` — onboard profile name (None = 未命名).
+#[tauri::command]
+pub fn read_profile_name(
+    state: tauri::State<'_, AppState>,
+    profile: u8,
+) -> Result<Option<String>, String> {
+    with_device(&state, |d| d.read_profile_name(profile))
+}
+
+/// `0x1A/<profile>` — set the onboard profile name (`[len, ...UTF-8]`, ≤ 55 bytes).
+#[tauri::command]
+pub fn write_profile_name(
+    state: tauri::State<'_, AppState>,
+    profile: u8,
+    name: String,
+) -> Result<(), String> {
+    with_device(&state, |d| d.write_profile_name(profile, &name))
+}
+
 #[tauri::command]
 pub fn read_macros(state: tauri::State<'_, AppState>, total_len: usize) -> Result<String, String> {
     with_device(&state, |d| d.read_macro_region(total_len).map(|v| hex(&v)))
@@ -192,6 +220,6 @@ pub fn get_tables() -> Result<serde_json::Value, String> {
     }))
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }

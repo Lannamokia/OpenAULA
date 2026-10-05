@@ -4,19 +4,46 @@ import { el } from "./ui";
 import { renderDevices } from "./pages/devices";
 import { renderStatus } from "./pages/status";
 import { renderKeymap } from "./pages/keymap";
+import { renderAdvanced } from "./pages/advanced";
+import { renderTrigger } from "./pages/trigger";
+import { renderMacros } from "./pages/macros";
+import { renderLighting } from "./pages/lighting";
 import { renderProfiles } from "./pages/profiles";
+import { renderMusic } from "./pages/music";
+import { renderSettings } from "./pages/settings";
 import { renderDebug } from "./pages/debug";
 
 const PAGES = [
   { id: "devices", label: "设备", render: renderDevices, needsDevice: false },
   { id: "status", label: "设备信息", render: renderStatus, needsDevice: true },
   { id: "keymap", label: "改键", render: renderKeymap, needsDevice: true },
+  { id: "advanced", label: "高级键", render: renderAdvanced, needsDevice: true },
+  { id: "trigger", label: "触发设置", render: renderTrigger, needsDevice: true },
+  { id: "macros", label: "宏", render: renderMacros, needsDevice: true },
+  { id: "lighting", label: "灯光", render: renderLighting, needsDevice: true },
+  { id: "music", label: "神光同步", render: renderMusic, needsDevice: true },
   { id: "profiles", label: "板载配置", render: renderProfiles, needsDevice: true },
+  { id: "settings", label: "系统设置", render: renderSettings, needsDevice: true },
   { id: "debug", label: "原始命令", render: renderDebug, needsDevice: true },
 ];
 
 let connected = false;
 let activeId = "devices";
+
+/** 离开页面时的收尾：设备上的行程监测流/校准轮询必须停掉，否则会一直往主机推数据。 */
+async function leavePage(id: string): Promise<void> {
+  if (id !== "trigger") return;
+  try {
+    await api.stopTravelMonitor();
+  } catch {
+    /* 设备没开也正常 */
+  }
+  try {
+    await api.stopCalibration();
+  } catch {
+    /* 同上 */
+  }
+}
 
 async function refreshConnPill(pill: HTMLElement): Promise<void> {
   pill.classList.toggle("on", connected);
@@ -25,8 +52,7 @@ async function refreshConnPill(pill: HTMLElement): Promise<void> {
     : "未连接设备";
 }
 
-async function renderActive(main: HTMLElement): Promise<void> {
-  const page = main.querySelector<HTMLElement>(`.page[data-id="${activeId}"]`)!;
+async function renderActive(main: HTMLElement): Promise<void> {  const page = main.querySelector<HTMLElement>(`.page[data-id="${activeId}"]`)!;
   main.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
   page.classList.add("active");
   const def = PAGES.find((p) => p.id === activeId)!;
@@ -72,6 +98,7 @@ async function main(): Promise<void> {
       text: p.label,
     });
     btn.onclick = async () => {
+      if (activeId !== p.id) await leavePage(activeId);
       activeId = p.id;
       nav.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");

@@ -1,0 +1,41 @@
+{
+  "device": "AULA HERO 68 XS",
+  "note": "0x04/<base> 整块写入的第 1 字节 effect_id；0=关闭；能力位图 0x82/0x09 [25] bit i => id (i+1) 受支持（checkLightingSupported）。id 与名称的对应取自网页驱动自身源码，见 source。",
+  "keyboard": [
+    { "id": 0, "name": "关闭", "i18nKey": "kLight.lightModeOff" },
+    { "id": 1, "name": "常亮灯效", "i18nKey": "kLight.lightEffectBy.static" },
+    { "id": 2, "name": "呼吸模式", "i18nKey": "kLight.lightEffectBy.dynamic1" },
+    { "id": 3, "name": "梦幻彩虹", "i18nKey": "kLight.lightEffectBy.dynamic2" },
+    { "id": 4, "name": "一触即发", "i18nKey": "kLight.lightEffectBy.dynamic3" },
+    { "id": 5, "name": "雨中漫步", "i18nKey": "kLight.lightEffectBy.dynamic4" },
+    { "id": 6, "name": "彩虹转轮", "i18nKey": "kLight.lightEffectBy.dynamic5" },
+    { "id": 7, "name": "涟漪扩散", "i18nKey": "kLight.lightEffectBy.dynamic6" },
+    { "id": 8, "name": "繁星点点", "i18nKey": "kLight.lightEffectBy.dynamic7" },
+    { "id": 9, "name": "踏雪无痕", "i18nKey": "kLight.lightEffectBy.dynamic8" },
+    { "id": 10, "name": "川流不息", "i18nKey": "kLight.lightEffectBy.dynamic9" },
+    { "id": 11, "name": "随波逐流", "i18nKey": "kLight.lightEffectBy.dynamic10" },
+    { "id": 12, "name": "如影随形", "i18nKey": "kLight.lightEffectBy.dynamic11" },
+    { "id": 13, "name": "正弦光波", "i18nKey": "kLight.lightEffectBy.dynamic12" },
+    { "id": 14, "name": "左右扫描", "i18nKey": "kLight.lightEffectBy.dynamic13" },
+    { "id": 15, "name": "旋转风车", "i18nKey": "kLight.lightEffectBy.dynamic14" },
+    { "id": 16, "name": "七彩瀑布", "i18nKey": "kLight.lightEffectBy.dynamic15" },
+    { "id": 17, "name": "花开富贵", "i18nKey": "kLight.lightEffectBy.dynamic16" },
+    { "id": 18, "name": "旋转风暴", "i18nKey": "kLight.lightEffectBy.dynamic17" },
+    { "id": 19, "name": "自定义", "i18nKey": "kLight.lightEffectBy.custom" }
+  ],
+  "keyboardUiOrder": [1, 19, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  "side": [
+    { "id": 0, "name": "关闭", "i18nKey": "kLight.lightModeOff" },
+    { "id": 1, "name": "川流不息", "i18nKey": "kLight.atmosphereSetBy.mode3" },
+    { "id": 2, "name": "梦幻彩虹", "i18nKey": "kLight.atmosphereSetBy.mode2" },
+    { "id": 3, "name": "常亮模式", "i18nKey": "kLight.atmosphereSetBy.custom" },
+    { "id": 4, "name": "呼吸模式", "i18nKey": "kLight.atmosphereSetBy.mode1" },
+    { "id": 5, "name": "跑马模式", "i18nKey": "kLight.atmosphereSetBy.mode4" }
+  ],
+  "sideUiOrder": [3, 4, 2, 1, 5],
+  "source": {
+    "names": "site/assets/index-ittJ_Bat.js 中文 i18n 字面量表 kLight.lightEffectBy（custom/static/dynamic1..17）与 kLight.atmosphereSetBy（custom/mode1..4）；混淆字符串 _0x3889ee(0x…. ) 已用 Node 提取字符串表解码核对",
+    "ids": "site/assets/light-BQUfhSVT.js（HERO 68 XS 灯光页 chunk）effectMode / logoMode 数组中每个 {label: i18n key, value: 16进制 id} 配对；键盘为 static=1/custom=19/dynamicN=N+1，侧灯为 custom=3/mode1=4/mode2=2/mode3=1/mode4=5（id 在 UI 顺序中不连续）",
+    "verifiedLive": "2026-10-06 经 kimi-webbridge 只读核对 hub.aulacn.com/keyboard/lightSet（设备 HERO 68 XS）：键盘灯效 19 项、氛围灯效 5 项的界面顺序与 uiOrder 完全一致；未做任何写入。当时官网 UI 主灯选中『常亮灯效』(id=1)，与驱动读取的 id=11 不一致——官网页面状态疑似未随设备刷新，id↔名称绑定以本表（网页自身源码）为准。"
+  }
+}
