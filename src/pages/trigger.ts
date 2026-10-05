@@ -109,6 +109,13 @@ let testFpsOut: HTMLElement | null = null;
 /** 丢包计数读数（只在测试中显示）。 */
 let testDropOut: HTMLElement | null = null;
 let dropTimer = 0;
+/** 收包速率与最近一次错误：无真机时靠这两个读数定位"到底是慢还是错"。 */
+let ingestCount = 0;
+let ingestRate = 0;
+let lastErr = "";
+let ingestOut: HTMLElement | null = null;
+let ingestTimer = 0;
+let ingestMsSum = 0;
 let calFpsOut: HTMLElement | null = null;
 let fpsText = FPS_IDLE;
 let fpsPrev = 0;
@@ -678,6 +685,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     testBarBox = box;
     testBarSig = "\u0000";
     paintBars();
+    const ingest = el("span", { class: "mono", text: "" });
+    ingestOut = testOn ? ingest : null;
     const fps = fpsReadout(testOn);
     testFpsOut = testOn ? fps : null;
     const drop = el("span", { class: "hint mono", text: "" });
@@ -688,6 +697,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         {},
         "行程测试",
         el("span", { class: "hint", text: "实时显示按键行程" }),
+        ingest,
         ...(selIds().length > MON_MAX_KEYS
           ? [el("span", { class: "hint", text: `（最多同时测 ${MON_MAX_KEYS} 键，已取前 ${MON_MAX_KEYS} 个）` })]
           : []),
@@ -798,6 +808,21 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     resetFps();
     renderTest();
     void refreshDrop();
+    ingestCount = 0;
+    ingestRate = 0;
+    ingestMsSum = 0;
+    ingestTimer = window.setInterval(() => {
+      ingestRate = ingestCount;
+      const avgMs = ingestCount > 0 ? Math.round(ingestMsSum / ingestCount) : 0;
+      ingestCount = 0;
+      ingestMsSum = 0;
+      if (ingestOut) {
+        const parts = [`收包 ${ingestRate}/s`];
+        if (avgMs) parts.push(`平均 ${avgMs}ms`);
+        if (lastErr) parts.push(lastErr);
+        ingestOut.textContent = parts.join(" · ");
+      }
+    }, 1000);
     dropTimer = window.setInterval(() => void refreshDrop(), 500);
     void pollTravel();
   }
@@ -810,6 +835,10 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     if (dropTimer) {
       window.clearInterval(dropTimer);
       dropTimer = 0;
+    }
+    if (ingestTimer) {
+      window.clearInterval(ingestTimer);
+      ingestTimer = 0;
     }
     testOn = false;
     live.clear();
@@ -839,6 +868,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     }
     if (testBusy || !testOn) return;
     testBusy = true;
+    const tickStart = Date.now();
     try {
       // 0x98/0x01 是"一次快照"而不是流：每轮都必须重发，刷新率就等于重发频率。
       const now = Date.now();
@@ -849,6 +879,9 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         : await api.readTriggerEvents(TRAVEL_WINDOW_MS);
       if (needArm) lastArmAt = now;
       failRun = 0;
+      lastErr = "";
+      ingestCount++;
+      ingestMsSum += Date.now() - tickStart;
       const at = Date.now();
       for (const s of ev.travel) {
         live.set(s.id, { mm: toMm(s.distance), press: s.press, at });
@@ -858,6 +891,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       // 单拍失败是常态（无线链路偶发丢片），跳过这一拍继续；
       // 连续失败太多才认为设备真的不在了（多半是休眠）。
       failRun++;
+      lastErr = String(e);
       if (failRun === 6) {
         toast(`读数中断（${e}）—— 若持续无数据，请按一下键盘唤醒设备`, true);
       }
