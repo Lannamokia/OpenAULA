@@ -1,7 +1,7 @@
 import "./style.css";
 import { api } from "./api";
 import { el } from "./ui";
-import { renderDevices } from "./pages/devices";
+import { clearDeviceSession, renderDevices } from "./pages/devices";
 import { renderStatus } from "./pages/status";
 import { renderKeymap } from "./pages/keymap";
 import { renderAdvanced } from "./pages/advanced";
@@ -28,6 +28,8 @@ const PAGES = [
 ];
 
 let connected = false;
+/** 连接探测是否得到应答；无线下 false 基本等于键盘睡着了。 */
+let awake = true;
 let activeId = "devices";
 
 /** 离开页面时的收尾：设备上的行程监测流/校准轮询必须停掉，否则会一直往主机推数据。 */
@@ -46,10 +48,14 @@ async function leavePage(id: string): Promise<void> {
 }
 
 async function refreshConnPill(pill: HTMLElement): Promise<void> {
+  const sleeping = connected && !awake;
   pill.classList.toggle("on", connected);
-  pill.querySelector("span:last-child")!.textContent = connected
-    ? "设备已连接"
-    : "未连接设备";
+  pill.querySelector(".dot")!.classList.toggle("warn", sleeping);
+  pill.querySelector("span:last-child")!.textContent = !connected
+    ? "未连接设备"
+    : sleeping
+      ? "设备已连接（可能休眠）"
+      : "设备已连接";
 }
 
 async function renderActive(main: HTMLElement): Promise<void> {  const page = main.querySelector<HTMLElement>(`.page[data-id="${activeId}"]`)!;
@@ -85,6 +91,8 @@ async function main(): Promise<void> {
       await api.closeDevice();
     } finally {
       connected = false;
+      awake = true;
+      clearDeviceSession();
       await refreshConnPill(pill);
       await renderActive(mainEl);
     }
@@ -112,8 +120,9 @@ async function main(): Promise<void> {
   const app = document.getElementById("app")!;
   app.append(nav, mainEl);
 
-  window.addEventListener("aula:connected", async () => {
+  window.addEventListener("aula:connected", async (ev: Event) => {
     connected = true;
+    awake = (ev as CustomEvent<{ awake?: boolean }>).detail?.awake ?? true;
     await refreshConnPill(pill);
     await renderActive(mainEl);
   });

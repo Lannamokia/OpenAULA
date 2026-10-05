@@ -35,6 +35,8 @@ fn main() {
             lighting::set_lightbox_colors,
             lighting::write_custom_colors,
             lighting::read_custom_color,
+            lighting::lighting_caps,
+            lighting::lighting_zone,
             macros::read_macro_capacity,
             macros::read_macro_set,
             macros::write_macro_set,

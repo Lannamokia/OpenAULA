@@ -1,5 +1,5 @@
 import { api } from "../api";
-import { el, toast } from "../ui";
+import { beginLoading, el, toast } from "../ui";
 
 /** 本机板载配置数量（实测 3 个，0-based；越界写入会被设备拒绝）。 */
 const PROFILE_COUNT = 3;
@@ -24,26 +24,33 @@ export async function renderProfiles(page: HTMLElement): Promise<void> {
   const drafts = new Map<number, string>();
 
   async function refresh(): Promise<void> {
+    const task = beginLoading("正在读取板载配置…");
     try {
-      current = await api.getProfile();
-    } catch (e) {
-      current = null;
-      listCard.replaceChildren(
-        el("h2", { text: "三个配置" }),
-        el("div", { class: "empty", text: `读取当前配置失败: ${e}` }),
-      );
-      return;
-    }
-    for (let i = 0; i < PROFILE_COUNT; i++) {
-      if (!drafts.has(i)) {
-        try {
-          names.set(i, await api.readProfileName(i));
-        } catch {
-          names.set(i, null);
+      try {
+        current = await api.getProfile();
+      } catch (e) {
+        current = null;
+        listCard.replaceChildren(
+          el("h2", { text: "三个配置" }),
+          el("div", { class: "empty", text: `读取当前配置失败: ${e}` }),
+        );
+        return;
+      }
+      for (let i = 0; i < PROFILE_COUNT; i++) {
+        if (!drafts.has(i)) {
+          task.setText(`正在读取配置 ${i + 1}/${PROFILE_COUNT} 的名称…`);
+          try {
+            names.set(i, await api.readProfileName(i));
+          } catch {
+            names.set(i, null);
+          }
+          task.setProgress((i + 1) / PROFILE_COUNT);
         }
       }
+      render();
+    } finally {
+      task.done();
     }
-    render();
   }
 
   function render(): void {

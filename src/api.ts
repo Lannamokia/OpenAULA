@@ -12,6 +12,13 @@ export interface DeviceDesc {
   framed: boolean;
 }
 
+/** `open_device` 的结果：设备信息 + 连接探测是否得到应答。
+ *  `awake === false` 基本只有一个原因：无线接收器下键盘睡着了（按一下键即可唤醒）。 */
+export interface OpenResult {
+  device: DeviceDesc;
+  awake: boolean;
+}
+
 export interface Battery {
   level: number;
   flags: number;
@@ -268,7 +275,7 @@ export interface KeyColor {
 export const api = {
   listDevices: () => invoke<DeviceDesc[]>("list_devices"),
   openDevice: (path?: string) =>
-    invoke<DeviceDesc>("open_device", { path: path ?? null }),
+    invoke<OpenResult>("open_device", { path: path ?? null }),
   closeDevice: () => invoke<void>("close_device"),
   deviceStatus: () => invoke<DeviceStatus>("device_status"),
   readKeymap: (layer: number, system: number, ids: number[]) =>
@@ -314,6 +321,11 @@ export const api = {
   rawExchange: (cmd: number, param: number, data: string) =>
     invoke<RawResult>("raw_exchange", { cmd, param, data }),
   lightingOverview: () => invoke<LightingOverview>("lighting_overview"),
+  /** 只读灯光能力块。与 `lightingZone` 配合可以逐区读取并显示进度。 */
+  lightingCaps: () => invoke<LightingCaps | null>("lighting_caps"),
+  /** 读单个灯区（`0x84/<base>`）。无线下每次都是一整个往返，所以逐区读。 */
+  lightingZone: (base: number, directionSupported: boolean) =>
+    invoke<ZoneEffect>("lighting_zone", { base, directionSupported }),
   setZoneEffect: (base: number, effect: ZoneEffect) =>
     invoke<void>("set_zone_effect", { base, effect }),
   setFullKeysRgb: (color: Rgb) =>

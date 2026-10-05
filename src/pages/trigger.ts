@@ -8,7 +8,7 @@ import {
 } from "../api";
 import { layout68 } from "../data";
 import axesJson from "../data/axes.json";
-import { el, toast } from "../ui";
+import { beginLoading, el, toast } from "../ui";
 
 const SCALE = 1.12;
 
@@ -404,11 +404,14 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       el("h2", { text: "设备能力" }),
       el("div", { class: "empty", text: "读取能力…" }),
     );
+    const task = beginLoading("正在读取设备能力…");
     try {
       caps = await api.triggerCaps();
     } catch (e) {
       caps = null;
       capsErr = String(e);
+    } finally {
+      task.done();
     }
     renderCaps();
     renderAxis();
@@ -418,6 +421,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
   }
 
   async function loadAllSwitchTypes(): Promise<void> {
+    const task = beginLoading("正在读取整盘轴体…");
     try {
       mergeSwitchTypes(
         await api.readSwitchTypes(layout68.map((k) => k.keyValue)),
@@ -426,6 +430,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       renderAxis();
     } catch {
       /* 整盘轴体读不出来不影响其它控件，选中键时还会再读一次 */
+    } finally {
+      task.done();
     }
   }
 
@@ -505,29 +511,34 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       renderCal();
       return;
     }
+    const task = beginLoading("正在读取选中键的触发参数…");
     try {
-      const [st, tv, rt, sa] = await Promise.all([
-        api.readSwitchTypes(ids),
-        api.readKeyTravel(layer, system, ids),
-        api.readRapidTriggers(layer, system, ids),
-        api.readSafeArea(ids),
-      ]);
+      try {
+        const [st, tv, rt, sa] = await Promise.all([
+          api.readSwitchTypes(ids),
+          api.readKeyTravel(layer, system, ids),
+          api.readRapidTriggers(layer, system, ids),
+          api.readSafeArea(ids),
+        ]);
+        if (token !== selToken) return;
+        mergeSwitchTypes(st);
+        travels = new Map(tv.map((e) => [e.id, e.travel]));
+        rts = new Map(rt.map((e) => [e.id, e]));
+        safes = new Map(sa.map((e) => [e.id, e]));
+      } catch (e) {
+        if (token !== selToken) return;
+        toast(`读取选中键的触发参数失败：${e}`, true);
+      }
       if (token !== selToken) return;
-      mergeSwitchTypes(st);
-      travels = new Map(tv.map((e) => [e.id, e.travel]));
-      rts = new Map(rt.map((e) => [e.id, e]));
-      safes = new Map(sa.map((e) => [e.id, e]));
-    } catch (e) {
-      if (token !== selToken) return;
-      toast(`读取选中键的触发参数失败：${e}`, true);
+      renderKb();
+      renderAxis();
+      renderTravel();
+      renderRt();
+      renderDead();
+      renderCal();
+    } finally {
+      task.done();
     }
-    if (token !== selToken) return;
-    renderKb();
-    renderAxis();
-    renderTravel();
-    renderRt();
-    renderDead();
-    renderCal();
   }
 
   async function readBackSwitchTypes(ids: number[]): Promise<void> {

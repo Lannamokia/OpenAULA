@@ -1,18 +1,37 @@
 import {
   api,
   type KeyColor,
+  type LightingCaps,
   type LightingOverview,
   type Rgb,
   type ZoneEffect,
+  type ZoneState,
 } from "../api";
 import { effects, layout68, type EffectEntry } from "../data";
-import { el, toast } from "../ui";
+import { beginLoading, el, toast } from "../ui";
 
 /** 键位图缩放（与改键页一致）。 */
 const SCALE = 1.12;
 
 const DIRECTIONS = ["无 / 正向", "反向 / 左", "右", "上", "下"];
 const MAX_LIGHTBOX_CELLS = 400;
+
+/** 灯区表，与 Rust 侧 `lighting::ZONES` 一致（顺序即页面 tab 顺序）。 */
+const ZONE_DEFS: { base: number; name: string }[] = [
+  { base: 1, name: "主灯" },
+  { base: 6, name: "侧灯" },
+  { base: 11, name: "Logo" },
+  { base: 35, name: "灯箱" },
+];
+
+/** 能力块是否声明了该灯区。能力块读失败时当作「有」，交给逐区实读去决定。 */
+function zoneSupported(base: number, caps: LightingCaps | null): boolean {
+  if (!caps) return true;
+  if (base === 6) return caps.side_light;
+  if (base === 11) return caps.logo_light;
+  if (base === 35) return caps.lightbox_rows > 0 && caps.lightbox_cols > 0;
+  return true; // 主灯恒存在
+}
 
 // --- 「开灯」要写回的 effect id 记忆 -----------------------------------------
 //
@@ -86,6 +105,8 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
   let overview: LightingOverview | null = null;
   let profile = 0;
   let activeBase = 1;
+  /** 还在读取中的灯区（读取失败与未开始读取要区分显示）。 */
+  const loadingZones = new Set<number>();
   // 每键改色的待下发颜色与选中键。
   const pending = new Map<number, Rgb>();
   const selected = new Set<number>();
@@ -101,25 +122,72 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
   const lbCard = el("div", { class: "card" });
   page.append(capsCard, zoneCard, fullCard, perkeyCard, lbCard);
 
+  /**
+   * 分步读取：能力块 + 逐灯区，每读完一步刷新界面并推进进度条。
+   *
+   * 无线链路下每次 `lightingZone` 都是一个完整往返，所以进度是真实可数的；
+   * 中途某个灯区失败只标记该灯区，其余照常显示。
+   */
   async function load(): Promise<void> {
+    const task = beginLoading("正在读取灯光…");
     try {
       profile = await api.getProfile().catch(() => profile);
-      overview = await api.lightingOverview();
-      if (overview.caps && overview.caps.lightbox_rows > 0 && overview.caps.lightbox_cols > 0) {
-        const n = overview.caps.lightbox_rows * overview.caps.lightbox_cols;
+
+      let caps: LightingCaps | null = null;
+      try {
+        caps = await api.lightingCaps();
+      } catch {
+        caps = null; // 能力块读不出来：逐区试读，让实际结果说话
+      }
+
+      const zones: ZoneState[] = ZONE_DEFS.map((z) => ({
+        base: z.base,
+        name: z.name,
+        supported: zoneSupported(z.base, caps),
+        effect: null,
+        error: null,
+      }));
+      overview = { caps, zones };
+      if (caps && caps.lightbox_rows > 0 && caps.lightbox_cols > 0) {
+        const n = caps.lightbox_rows * caps.lightbox_cols;
         if (lbColors.length !== n) {
           lbColors = Array.from({ length: n }, () => ({ r: 0, g: 0, b: 0 }));
         }
       }
+
+      const todo = zones.filter((z) => z.supported);
+      loadingZones.clear();
+      for (const z of todo) loadingZones.add(z.base);
+      // 总步数 = 1（能力块）+ 实际要读的灯区数。
+      const total = 1 + todo.length;
+      task.setProgress(1 / total);
+      renderAll();
+
+      for (let i = 0; i < todo.length; i++) {
+        const z = todo[i];
+        task.setText(`读取灯区 ${i + 1}/${todo.length} · ${z.name}`);
+        try {
+          z.effect = await api.lightingZone(z.base, caps?.direction_supported ?? false);
+        } catch (e) {
+          z.error = String(e);
+        }
+        loadingZones.delete(z.base);
+        task.setProgress((i + 2) / total);
+        renderAll();
+      }
+      task.setProgress(1);
+      task.setText("灯光读取完成");
     } catch (e) {
       overview = null;
+      loadingZones.clear();
+      page.querySelectorAll(":scope > .layers").forEach((n) => n.remove());
       zoneCard.replaceChildren(
         el("h2", { text: "灯区效果" }),
         el("div", { class: "empty", text: `读取失败: ${e}` }),
       );
-      return;
+    } finally {
+      task.done();
     }
-    renderAll();
   }
 
   function renderCaps(): void {
@@ -158,6 +226,13 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       return;
     }
     if (!z.effect) {
+      if (loadingZones.has(z.base)) {
+        zoneCard.replaceChildren(
+          el("h2", { text: `灯区效果 — ${z.name}` }),
+          el("div", { class: "empty", text: "读取中…" }),
+        );
+        return;
+      }
       zoneCard.replaceChildren(
         el("h2", { text: "灯区效果" }),
         el("div", { class: "empty", text: `${z.name}：读取失败${z.error ? ` (${z.error})` : ""}。` }),
@@ -200,6 +275,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     });
 
     async function apply(next: ZoneEffect, note: string): Promise<void> {
+      const task = beginLoading(`正在下发「${z.name}」…`);
       try {
         await api.setZoneEffect(z.base, next);
         rememberEffect(profile, z.base, next.effect_id);
@@ -207,6 +283,8 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
         await load(); // 写后读回，界面显示的一定是设备实际状态
       } catch (err) {
         alert(`写入失败: ${err}`);
+      } finally {
+        task.done();
       }
     }
 
@@ -285,9 +363,10 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     for (const z of overview.zones) {
       const state = z.supported ? "" : "（无）";
       const live = z.effect && z.effect.effect_id !== 0 ? " · 亮" : "";
+      const busy = loadingZones.has(z.base) ? " · 读取中" : "";
       const b = el("button", {
         class: `btn${z.base === activeBase ? " primary" : ""}`,
-        text: z.name + state + live,
+        text: z.name + state + live + busy,
       });
       b.onclick = () => {
         activeBase = z.base;
@@ -304,12 +383,14 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     const apply = el("button", { class: "btn primary", text: "全键应用" });
     apply.onclick = async () => {
       apply.disabled = true;
+      const task = beginLoading("正在下发全键颜色…");
       try {
         await api.setFullKeysRgb(hexToRgb(colorIn.value));
         toast("全键颜色已下发");
       } catch (err) {
         alert(`写入失败: ${err}`);
       } finally {
+        task.done();
         apply.disabled = false;
       }
     };
@@ -332,6 +413,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     send.disabled = pending.size === 0;
     send.onclick = async () => {
       send.disabled = true;
+      const task = beginLoading("正在下发每键颜色…");
       try {
         const entries: KeyColor[] = [...pending.entries()].map(([id, color]) => ({ id, color }));
         await api.setKeyColors(entries);
@@ -341,6 +423,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       } catch (err) {
         alert(`写入失败: ${err}`);
       } finally {
+        task.done();
         send.disabled = false;
       }
     };
@@ -356,6 +439,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     persist.disabled = pending.size === 0;
     persist.onclick = async () => {
       persist.disabled = true;
+      const task = beginLoading("正在保存到自定义灯区…");
       try {
         const entries: KeyColor[] = [...pending.entries()].map(([id, color]) => ({ id, color }));
         await api.writeCustomColors(entries);
@@ -363,6 +447,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       } catch (err) {
         alert(`写入失败: ${err}`);
       } finally {
+        task.done();
         persist.disabled = false;
       }
     };
@@ -370,17 +455,22 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     pull.disabled = selected.size === 0;
     pull.onclick = async () => {
       pull.disabled = true;
+      const task = beginLoading("正在读回自定义色…");
       try {
         let n = 0;
-        for (const id of selected) {
+        const ids = [...selected];
+        for (const id of ids) {
+          task.setText(`正在读回自定义色 ${n + 1}/${ids.length}…`);
           pending.set(id, await api.readCustomColor(id));
           n++;
+          task.setProgress(n / ids.length);
         }
         toast(`已从设备读回 ${n} 个键的自定义色`);
         renderPerkey();
       } catch (err) {
         alert(`读取失败: ${err}`);
       } finally {
+        task.done();
         pull.disabled = false;
       }
     };
@@ -452,12 +542,14 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     const send = el("button", { class: "btn primary", text: "下发灯箱" });
     send.onclick = async () => {
       send.disabled = true;
+      const task = beginLoading("正在下发灯箱矩阵…");
       try {
         await api.setLightboxColors(lbColors);
         toast("灯箱矩阵已下发");
       } catch (err) {
         alert(`写入失败: ${err}`);
       } finally {
+        task.done();
         send.disabled = false;
       }
     };

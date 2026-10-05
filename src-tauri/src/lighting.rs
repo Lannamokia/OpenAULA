@@ -315,9 +315,26 @@ impl AulaDevice {
     }
 }
 
+/// Capability block only (`0x82/0x09` + `0x82/0x0f`), for the stepped read path.
 #[tauri::command]
-pub fn lighting_overview(state: tauri::State<'_, AppState>) -> Result<LightingOverview, String> {
-    with_device(&state, |d| {
+pub fn lighting_caps(state: tauri::State<'_, AppState>) -> Result<Option<LightingCaps>, String> {
+    with_device(&state, |d| Ok(d.lighting_caps().ok()))
+}
+
+/// One zone's effect block (`0x84/<base>`). Split out of `lighting_overview` so
+/// the UI can read the zones one at a time and show real progress — on the
+/// wireless link each of these costs a full round trip.
+#[tauri::command]
+pub fn lighting_zone(
+    state: tauri::State<'_, AppState>,
+    base: u8,
+    direction_supported: bool,
+) -> Result<ZoneEffect, String> {
+    with_device(&state, |d| d.read_zone_effect(base, direction_supported))
+}
+
+#[tauri::command]
+pub fn lighting_overview(state: tauri::State<'_, AppState>) -> Result<LightingOverview, String> {    with_device(&state, |d| {
         let caps = d.lighting_caps().ok();
         let direction_supported = caps
             .as_ref()

@@ -19,6 +19,11 @@ use serde::{Deserialize, Serialize};
 use crate::proto::*;
 
 const READ_CHUNK_MS: i32 = 120;
+/// Attempts per command on the framed (wireless) link — see `exchange`.
+const FRAMED_ATTEMPTS: usize = 3;
+/// Per-attempt budget on the framed link. A healthy round trip is ~34ms, so
+/// this is generous; the point of the retries is to survive a lost fragment.
+const FRAMED_TIMEOUT: Duration = Duration::from_millis(1500);
 /// Delay between the 5 fragments of one wireless transfer.
 ///
 /// Measured on the 8K receiver (30 transfers per setting, `0x98/0x01`):
@@ -360,22 +365,36 @@ impl AulaDevice {
     }
 
     /// Send one application packet and wait for its reply, auto-selecting the
-    /// link. Retries a failed framed exchange once (as the Python ref does).
+    /// link.
+    ///
+    /// The framed (wireless) link loses the odd fragment — roughly one transfer
+    /// in thirty — which would otherwise surface as a multi-second stall and a
+    /// failed read. Retrying is cheap there (a round trip is ~34ms), so it gets
+    /// more attempts than the wired link's single retry.
     pub fn exchange(&self, packet: &[u8; PACKET_SIZE]) -> Result<Option<[u8; PACKET_SIZE]>, String> {
         if !self.framed {
             return self.exchange_raw(packet, Duration::from_millis(1000));
         }
-        for attempt in 0..=1 {
-            let r = self.exchange_framed_lockstep(packet, Duration::from_millis(2500))?;
-            if r.is_some() {
-                return Ok(r);
+        for attempt in 0..FRAMED_ATTEMPTS {
+            if let Some(r) = self.exchange_framed_lockstep(packet, FRAMED_TIMEOUT)? {
+                return Ok(Some(r));
             }
-            if attempt == 0 {
-                continue;
-            }
-            return Ok(None);
+            let _ = attempt;
         }
         Ok(None)
+    }
+
+    /// One harmless read (current onboard profile) with an explicit budget.
+    ///
+    /// The wireless keyboard sleeps when idle and then answers nothing; this is
+    /// how the connect step tells "ready" from "asleep" instead of leaving the
+    /// user staring at a hung UI.
+    pub fn probe(&self, budget: Duration) -> bool {
+        let pkt = build_app_packet(CMD_PROFILE_R, 0x00, &[]);
+        if !self.framed {
+            return matches!(self.exchange_raw(&pkt, budget), Ok(Some(_)));
+        }
+        matches!(self.exchange_framed_lockstep(&pkt, budget), Ok(Some(_)))
     }
 
     /// Write a packet **without waiting for a reply**.

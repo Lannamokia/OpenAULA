@@ -125,6 +125,11 @@ body {
   background: var(--accent);
 }
 
+/* 已连接但设备没应答（无线下多为休眠），用黄色而不是断开色。 */
+.conn-pill.on .dot.warn {
+  background: var(--warn);
+}
+
 /* ---------- main ---------- */
 
 .main {
@@ -576,4 +581,112 @@ input[type="color"] {
 .card h2 > button.btn.power {
   float: right;
   margin-top: -4px;
+}
+
+/* ---------- 连接提醒（设备休眠） ---------- */
+
+.card.notice {
+  border-left: 3px solid var(--warn);
+}
+
+.card.notice h2 .hint {
+  color: var(--warn);
+}
+
+.notice-body {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.notice-body.strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- 非阻塞加载指示器 ---------- */
+/* 浮在顶部的小卡片，pointer-events: none —— 不拦截点击、不遮住页面。 */
+
+.loading-card {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  min-width: 240px;
+  max-width: 440px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  animation: loading-in 0.16s ease;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.loading-text {
+  flex: 1;
+  color: var(--text);
+}
+
+.loading-pct {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.loading-card .spin {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loading-spin 0.7s linear infinite;
+}
+
+.loading-bar {
+  display: none;
+  margin-top: 9px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bg-raise);
+  overflow: hidden;
+}
+
+.loading-card.determinate .loading-bar {
+  display: block;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.18s ease;
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }

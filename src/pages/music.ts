@@ -1,5 +1,5 @@
 import { api, type MusicStatus } from "../api";
-import { el, toast } from "../ui";
+import { beginLoading, el, toast } from "../ui";
 
 /** 频段数范围，与 src-tauri/src/music.rs 的 MIN_BANDS / MAX_BANDS 保持一致。 */
 const BAND_MIN = 4;
@@ -192,6 +192,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   async function startStream(): Promise<void> {
     showError(null);
     startBtn.disabled = true;
+    const task = beginLoading("正在启动神光同步…");
     try {
       await api.musicStart(Math.round(st.bands));
     } catch (e) {
@@ -201,6 +202,8 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       renderControls();
       renderStatus();
       return;
+    } finally {
+      task.done();
     }
     st.running = true;
     renderControls();
@@ -211,11 +214,14 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
   async function stopStream(): Promise<void> {
     clearTimers();
     st.running = false;
+    const task = beginLoading("正在停止神光同步…");
     try {
       await api.musicStop();
       toast("已停止神光同步");
     } catch (e) {
       showError(`停止失败：${e}`);
+    } finally {
+      task.done();
     }
     st.status = null;
     renderControls();

@@ -43,7 +43,7 @@ pub fn list_devices(state: tauri::State<'_, AppState>) -> Result<Vec<DeviceDesc>
 }
 
 #[tauri::command]
-pub fn open_device(state: tauri::State<'_, AppState>, path: Option<String>) -> Result<DeviceDesc, String> {
+pub fn open_device(state: tauri::State<'_, AppState>, path: Option<String>) -> Result<OpenResult, String> {
     let mut hid_guard = state.hid.lock().map_err(|e| e.to_string())?;
     if hid_guard.is_none() {
         *hid_guard = Some(Hid::new()?);
@@ -63,9 +63,24 @@ pub fn open_device(state: tauri::State<'_, AppState>, path: Option<String>) -> R
         .map_err(|e| format!("无法打开读取句柄（{}）：{e}", desc.path))?;
     drop(hid_guard);
     let aula = AulaDevice::new(dev, reader, desc.clone());
+    // Probe before reporting success: the wireless keyboard sleeps when idle and
+    // then answers nothing at all, which would otherwise look like a hung app.
+    let awake = aula.probe(CONNECT_PROBE);
     *state.device.lock().map_err(|e| e.to_string())? = Some(aula);
-    Ok(desc)
+    Ok(OpenResult { device: desc, awake })
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OpenResult {
+    pub device: DeviceDesc,
+    /// False when the connect probe went unanswered — on the wireless link that
+    /// almost always means the keyboard is asleep, not that it is broken.
+    pub awake: bool,
+}
+
+/// Probe budget when connecting: long enough for a slow wireless round trip,
+/// short enough that a sleeping keyboard does not feel like a hang.
+const CONNECT_PROBE: std::time::Duration = std::time::Duration::from_secs(5);
 
 #[tauri::command]
 pub fn close_device(state: tauri::State<'_, AppState>) -> Result<(), String> {

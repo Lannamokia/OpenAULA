@@ -1,5 +1,5 @@
 import { api, toHex } from "../api";
-import { el } from "../ui";
+import { beginLoading, el } from "../ui";
 
 export async function renderStatus(page: HTMLElement): Promise<void> {
   page.replaceChildren(
@@ -8,6 +8,7 @@ export async function renderStatus(page: HTMLElement): Promise<void> {
     el("div", { class: "card" }, el("h2", { text: "状态" }), el("div", { class: "empty", text: "读取中…" })),
   );
   const card = page.querySelector(".card")!;
+  const task = beginLoading("正在读取设备信息…");
   let s;
   try {
     s = await api.deviceStatus();
@@ -17,6 +18,8 @@ export async function renderStatus(page: HTMLElement): Promise<void> {
       el("div", { class: "empty", text: `读取失败: ${e}` }),
     );
     return;
+  } finally {
+    task.done();
   }
 
   const stat = (k: string, v: string) =>
