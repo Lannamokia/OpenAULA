@@ -53,7 +53,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     el("h1", { text: "宏" }),
     el("p", {
       class: "sub",
-      text: "录制 / 编辑宏并绑定到任意层的按键。宏键码为 1 字节（HID usage）。",
+      text: "录制或编辑宏，并绑定到任意层的按键。",
     }),
   );
 
@@ -108,7 +108,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
         "容量",
         el("span", {
           class: "hint",
-          text: "估算 = 4×宏数 + Σ(4×动作数 + 名称字节数 + 1)",
+          text: "按字节估算",
         }),
       ),
       el(
@@ -132,7 +132,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
       el("p", {
         class: "hint",
         style: "margin:10px 0 0",
-        text: "⚠ 保存 = 整段回写：设备会擦除本次写入长度之外的宏数据，必须把全部宏一次性写入。",
+        text: "⚠ 保存会整段回写：不在列表里的宏会被擦除。",
       }),
     );
   }
@@ -159,7 +159,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
       "h2",
       {},
       "宏列表",
-      el("span", { class: "hint", text: "点击名称选中编辑；改动需点「保存到设备」生效" }),
+      el("span", { class: "hint", text: "改动需保存后才生效" }),
     );
     if (macros.length === 0) {
       listCard.replaceChildren(
@@ -413,7 +413,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     const keycode = hidFromEvent(e);
     if (keycode === 0 && !recWarned) {
       recWarned = true;
-      toast(`按键 ${e.code || e.key} 无法映射到 HID 键码，已记为 0x00，可稍后手改`, true);
+      toast(`按键 ${e.code || e.key} 无法识别，已记为 0，可稍后手改`, true);
     }
     macros[sel].actions.push({
       kind: e.type === "keydown" ? 0 : 1,
@@ -492,10 +492,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
     );
     if (recording) {
       controls.append(
-        el("span", {
-          class: "hint",
-          text: "正在录制：键盘输入将被拦截并追加为动作，Esc 停止。",
-        }),
+        el("span", { class: "hint", text: "正在录制：按键会被记录，Esc 停止。" }),
       );
     }
     if (m.actions.length === 0) {
@@ -548,7 +545,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
       "h2",
       {},
       "绑定到键",
-      el("span", { class: "hint", text: "keycode = 0x03 | loopType<<16 | loopCount<<8 | 宏下标" }),
+      el("span", { class: "hint", text: "把宏绑定到指定键" }),
     );
     if (macros.length === 0) {
       bindCard.replaceChildren(head, el("div", { class: "empty", text: "没有可绑定的宏。" }));
@@ -659,7 +656,7 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
         restoreBtn,
         el("span", {
           class: "mono",
-          text: `keycode = 0x${toHex(kc, 8)}（${bind.loopType === 1 ? `重复 ${Math.max(0, Math.min(255, bind.loopCount))} 次` : LOOP_TYPES.find(([v]) => v === bind.loopType)?.[1]}）`,
+          text: `${bind.loopType === 1 ? `重复 ${Math.max(0, Math.min(255, bind.loopCount))} 次` : LOOP_TYPES.find(([v]) => v === bind.loopType)?.[1]}`,
         }),
       ),
       el("div", {
@@ -667,7 +664,9 @@ export async function renderMacros(page: HTMLElement): Promise<void> {
         style: "margin:0",
         text:
           bind.orig !== null
-            ? `该键当前键码: 0x${toHex(bind.orig >>> 0, 8)}${bind.orig !== 0 ? `（已绑定「${byteName(bind.orig & 0xff)}」或其他功能）` : ""}`
+            ? bind.orig !== 0
+              ? `该键当前已绑定「${byteName(bind.orig & 0xff) || "其他功能"}」`
+              : "该键当前未绑定功能"
             : "读取原键位中…",
       }),
     );

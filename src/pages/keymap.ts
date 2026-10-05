@@ -59,7 +59,7 @@ export async function renderKeymap(page: HTMLElement): Promise<void> {
     el("h1", { text: "改键" }),
     el("p", {
       class: "sub",
-      text: "三层键位映射：基础层 (layer 0) / Fn 层 (layer 1) / Fn1 层 (layer 2)，param = (layer & 3) | ((system & 7) << 2)（0x83 读 / 0x03 写）。点击键位后在下方选择新键码、搜索、手输 hex 或绑定宏；宏键码 = (3<<24) | (循环方式<<16) | (次数<<8) | 宏下标（循环方式：1 = 指定次数，2 = 重复直至任意键按下，3 = 按住重复松开停止），全部改动由「应用全部改动」统一写入。",
+      text: "设置三层键位映射：选中键后改键码或绑定宏。",
     }),
   );
 
@@ -191,7 +191,7 @@ export async function renderKeymap(page: HTMLElement): Promise<void> {
         "h2",
         {},
         `键位图 — ${LAYERS[layer].label}`,
-        el("span", { class: "hint", text: "● = 待应用 · 右上角圆点 = 高级键" }),
+        el("span", { class: "hint", text: "● 待应用 · 圆点 = 高级键" }),
       ),
       el("div", { class: "kb-wrap" }, kb),
     );
@@ -290,7 +290,7 @@ export async function renderKeymap(page: HTMLElement): Promise<void> {
     };
     const sync = (): void => {
       const kc = compute();
-      readout.textContent = `宏键码 = ${keycodeName(kc)} (${hex8(kc)})`;
+      readout.textContent = `宏键码 = ${keycodeName(kc)}`;
     };
     idxSel.onchange = sync;
     loopSel.onchange = sync;
@@ -334,7 +334,7 @@ export async function renderKeymap(page: HTMLElement): Promise<void> {
 
     const searchInput = el("input", {
       type: "search",
-      placeholder: "搜索键名 / browserCode / hex（如 Space、KeyA、0x00000029）",
+      placeholder: "搜索键名或 hex（如 Space、KeyA、0x00000029）",
       style: "min-width:340px",
       value: searchText,
     });

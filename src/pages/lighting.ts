@@ -48,9 +48,6 @@ const hexToRgb = (s: string): Rgb => ({
   g: parseInt(s.slice(3, 5), 16),
   b: parseInt(s.slice(5, 7), 16),
 });
-const rgbText = (c: Rgb): string =>
-  `${c.r.toString(16).padStart(2, "0")} ${c.g.toString(16).padStart(2, "0")} ${c.b.toString(16).padStart(2, "0")}`;
-
 function field(label: string, input: HTMLElement): HTMLElement {
   return el("label", { class: "field" }, label, input);
 }
@@ -82,7 +79,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
     el("h1", { text: "灯光" }),
     el("p", {
       class: "sub",
-      text: "四个灯区（0x84 读 / 0x04 写整块）+ 全键单色 / 每键改色（0x08）+ 灯箱矩阵（0x29）。亮度 UI 1..22 ↔ 协议 0..21，速度 UI 1..6 ↔ 协议 0..5。",
+      text: "设置键盘各灯区的灯效、颜色与亮度。",
     }),
   );
 
@@ -128,7 +125,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
   function renderCaps(): void {
     if (!overview) return;
     const c = overview.caps;
-    capsCard.replaceChildren(el("h2", { text: "灯光能力" }, el("span", { class: "hint", text: "0x82/0x09" })));
+    capsCard.replaceChildren(el("h2", { text: "灯光能力" }, el("span", { class: "hint", text: "只读" })));
     if (!c) {
       capsCard.append(el("div", { class: "empty", text: "能力探测失败，下方按各区域实际读取结果显示。" }));
       return;
@@ -141,7 +138,6 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       stat("Logo 灯", c.logo_light ? "有" : "无"),
       stat("灯箱矩阵", c.lightbox_rows > 0 ? `${c.lightbox_rows} × ${c.lightbox_cols}` : "无"),
       stat("方向支持", c.direction_supported ? "是" : "否"),
-      stat("灯箱效果位图", `0x${c.effect_bitmap.toString(16).padStart(2, "0")}`),
       stat(
         "音乐灯",
         [c.music_main && "主灯", c.music_spectrum && "频谱", c.music_side && "侧灯"].filter(Boolean).join("/") || "无",
@@ -224,7 +220,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
         text: fx.name,
       });
       if (bitmap !== null && bitmap > 0 && fx.id >= 1 && (bitmap & (1 << (fx.id - 1))) === 0) {
-        b.title = "能力位图未声明支持此效果（仍可尝试下发）";
+        b.title = "设备未声明支持此效果（仍可尝试下发）";
       }
       b.onclick = () => void apply(readForm(fx.id), isOff ? "已关灯" : `灯效 → ${fx.name}（id=${fx.id}）`);
       grid.append(b);
@@ -263,7 +259,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
         "h2",
         {},
         `灯区效果 — ${z.name}`,
-        el("span", { class: "hint", text: `0x84/${z.base} 读 / 0x04/${z.base} 写` }),
+        el("span", { class: "hint", text: "点灯效即下发" }),
         power,
       ),
       el("div", { class: "block-label", text: "灯效模式" }),
@@ -275,7 +271,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
         applyBtn,
         el("span", {
           class: "hint mono",
-          text: `读回: effect=${e.effect_id} colorIndex=${e.color_index} rgb=${rgbText(e.color)} 亮度=${e.brightness} 速度=${e.speed}${e.direction !== null ? ` 方向=${e.direction}` : ""}`,
+          text: `当前：亮度 ${e.brightness + 1} · 速度 ${e.speed + 1} · 颜色 ${rgbToHex(e.color)}${e.direction !== null ? ` · 方向 ${e.direction}` : ""}`,
         }),
       ),
     );
@@ -318,7 +314,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       }
     };
     fullCard.replaceChildren(
-      el("h2", { text: "全键单色" }, el("span", { class: "hint", text: "0x08/2" })),
+      el("h2", { text: "全键单色" }, el("span", { class: "hint", text: "整块键盘一起生效" })),
       el("div", { class: "row" }, field("颜色", colorIn), apply),
     );
   }
@@ -419,7 +415,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       el(
         "h2",
         { text: "每键改色" },
-        el("span", { class: "hint", text: "0x08/1 即时下发（按颜色聚类）；0x06 持久化到自定义区；点键多选" }),
+        el("span", { class: "hint", text: "点键多选" }),
       ),
       el("div", { class: "kb-wrap" }, kb),
       el("div", { class: "row", style: "margin-top:12px" }, field("画笔颜色", colorIn), paint, send, persist, pull, clear),
@@ -466,7 +462,7 @@ export async function renderLighting(page: HTMLElement): Promise<void> {
       }
     };
     lbCard.replaceChildren(
-      el("h2", { text: "灯箱矩阵" }, el("span", { class: "hint", text: `0x29/3，RGB565，${c.lightbox_rows}×${c.lightbox_cols}` })),
+      el("h2", { text: "灯箱矩阵" }, el("span", { class: "hint", text: "点格子涂色" })),
       el("div", { class: "row", style: "margin-bottom:12px" }, field("画笔颜色", colorIn), send),
       grid,
     );

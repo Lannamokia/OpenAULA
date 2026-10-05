@@ -2,8 +2,7 @@ import { api, toHex, DEBOUNCE_MODES, POLLING_RATES } from "../api";
 import type { DeviceSettings, SettingsCaps } from "../api";
 import { el, toast } from "../ui";
 
-const TOP_NOTE =
-  "本页为整机开关设置：读取走 0x84/<param>、写入走 0x04/<param>；param 编号与灯光页的灯区不是同一套命名空间。";
+const TOP_NOTE = "调整键盘的整机开关设置。";
 const DESC_STYLE = "font-size:12px;color:var(--text-dim);margin-top:2px;line-height:1.5";
 const ROW_STYLE = "display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 0";
 const TITLE_STYLE = "font-size:13.5px;font-weight:600";
@@ -88,7 +87,7 @@ export async function renderSettings(page: HTMLElement): Promise<void> {
       ),
       item(
         "回报率设置",
-        "通过调整回报率，可改变按键操作后的反馈强度与响应效果。",
+        "回报率越高，按键响应越灵敏。",
         selectCtrl(POLLING_RATES, st.polling_rate, (v) => {
           const label = POLLING_RATES.find((o) => o.value === v)?.label ?? String(v);
           void apply(() => api.setPollingRate(v), `回报率已设为 ${label}`);
@@ -96,7 +95,7 @@ export async function renderSettings(page: HTMLElement): Promise<void> {
       ),
       item(
         "休眠设置",
-        "键盘无操作后自动休眠的时间，0 = 不休眠；单位毫秒（协议为 BE16，上限 65535）。",
+        "键盘无操作后进入休眠的时间；0 = 不休眠，单位毫秒。",
         numberCtrl(st.sleep_time, { min: "0", max: "65535", step: "100" }, (v) => {
           let n = Math.round(v);
           let clamped = false;
@@ -111,7 +110,7 @@ export async function renderSettings(page: HTMLElement): Promise<void> {
           }
           void apply(
             () => api.setSleepTime(n),
-            clamped ? "输入超出协议上限，已按 65535 ms 下发" : "休眠时间已更新",
+            clamped ? "输入超出上限，已按 65535 ms 下发" : "休眠时间已更新",
           );
         }),
       ),
@@ -120,14 +119,14 @@ export async function renderSettings(page: HTMLElement): Promise<void> {
     const keyRows = [
       item(
         "自适应校准",
-        "在使用过程中能够自动调整其按键响应，以适应不同的使用环境和条件。",
+        "自动微调按键触发，适应环境变化。",
         toggle(st.adaptive_calibration, false, (v) => {
           void apply(() => api.setAdaptiveCalibration(v), `自适应校准${onoff(v)}`);
         }),
       ),
       item(
         "连击优化",
-        "提高键盘在快速按键时的响应能力，减少误触发，从而提升游戏或输入体验。",
+        "减少快速连按时的误触发。",
         toggle(st.combo_optimization, false, (v) => {
           void apply(() => api.setComboOptimization(v), `连击优化${onoff(v)}`);
         }),
@@ -185,7 +184,7 @@ export async function renderSettings(page: HTMLElement): Promise<void> {
       { class: "card", style: "opacity:.85" },
       el("h2", { text: "原始上报" }),
       el("div", { class: "mono", style: "font-size:13px;letter-spacing:.08em", text: rawHex }),
-      el("p", { class: "sub", style: "margin:10px 0 0", text: "休眠相关原始上报（3 字节），语义未确证，仅供调试参考。" }),
+      el("p", { class: "sub", style: "margin:10px 0 0", text: "休眠相关原始上报，仅供调试参考。" }),
     );
 
     page.replaceChildren(

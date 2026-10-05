@@ -268,12 +268,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     el("h1", { text: "神光同步" }),
     el("p", {
       class: "sub",
-      text: "驱动侧实现：后端用 WASAPI 回环（loopback）抓取系统正在播放的声音，做 FFT 得到各频段能量，再按键盘的 15 个物理键列映射成逐键颜色；前端按刷新率取帧，走已验证的 0x08/1 逐键改色下发。不依赖键盘固件里的「音乐律动」，播放器 / 游戏 / 浏览器的声音都能驱动。另可读取 Windows 主题强调色一次性刷到全键盘。",
+      text: "让键盘灯光跟随电脑正在播放的声音律动。",
     }),
     el(
       "div",
       { class: "card" },
-      el("h2", { text: "控制" }, el("span", { class: "hint", text: "music_start / music_stop" })),
+      el("h2", { text: "控制" }, el("span", { class: "hint", text: "随系统声音变化" })),
       el("div", { class: "row" }, startBtn, stopBtn),
       el(
         "div",
@@ -284,11 +284,8 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       el(
         "div",
         { class: "row" },
-        field("刷新率", el("div", { class: "slider-row" }, fpsIn, fpsVal)),
-        el("span", {
-          class: "hint",
-          text: "频段数与刷新率的改动会在运行时立即重启推送；增益立刻生效。",
-        }),
+        field("更新频率", el("div", { class: "slider-row" }, fpsIn, fpsVal)),
+        el("span", { class: "hint", text: "改动立即生效。" }),
       ),
       el("div", { class: "block-label", text: "Windows 主题色" }),
       el(
@@ -304,7 +301,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       el(
         "h2",
         { text: "状态" },
-        el("span", { class: "hint", text: "music_status / music_frame" }),
+        el("span", { class: "hint", text: "实时读数" }),
       ),
       el(
         "div",

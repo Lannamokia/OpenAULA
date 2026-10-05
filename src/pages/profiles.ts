@@ -11,7 +11,7 @@ export async function renderProfiles(page: HTMLElement): Promise<void> {
     el("h1", { text: "板载配置" }),
     el("p", {
       class: "sub",
-      text: "0x90 读当前配置 / 0x10 切换（配置号在 data 字节）/ 0x9A 读名 / 0x1A 写名。每个配置是独立的一套键位、宏与灯光。",
+      text: "管理三套板载配置：切换配置、修改名称。",
     }),
   );
 
@@ -52,7 +52,7 @@ export async function renderProfiles(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "三个配置",
-        el("span", { class: "hint", text: "当前配置高亮；改名会写入设备板载存储" }),
+        el("span", { class: "hint", text: "改名会写入键盘" }),
       ),
     );
     for (let i = 0; i < PROFILE_COUNT; i++) {
@@ -147,7 +147,7 @@ export async function renderProfiles(page: HTMLElement): Promise<void> {
       el("p", {
         class: "sub",
         style: "margin-top:12px",
-        text: "切换立即生效，键盘灯效与键位会随之改变。名称最长 20 字符（协议上限 55 字节 UTF-8）。",
+        text: "切换立即生效，键盘灯效与键位会随之改变。名称最长 20 字符。",
       }),
     );
   }

@@ -4,7 +4,7 @@ import { el } from "../ui";
 export async function renderStatus(page: HTMLElement): Promise<void> {
   page.replaceChildren(
     el("h1", { text: "设备信息" }),
-    el("p", { class: "sub", text: "电量 / UUID / 固件版本 / 当前板载配置（只读）。" }),
+    el("p", { class: "sub", text: "查看键盘的电量、固件与配置信息。" }),
     el("div", { class: "card" }, el("h2", { text: "状态" }), el("div", { class: "empty", text: "读取中…" })),
   );
   const card = page.querySelector(".card")!;
@@ -29,7 +29,7 @@ export async function renderStatus(page: HTMLElement): Promise<void> {
     "div",
     { class: "grid" },
     stat("设备", s.product ?? "—"),
-    stat("链路", s.framed ? "8K 无线 (0x66 分帧)" : "有线 / 整包直发"),
+    stat("链路", s.framed ? "8K 无线" : "有线"),
     stat("VID:PID", `0x${toHex(s.vendor_id, 4)}:0x${toHex(s.product_id, 4)}`),
     stat("固件版本", s.firmware ?? "—"),
     stat("电量", battery),

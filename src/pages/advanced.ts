@@ -16,12 +16,12 @@ const LAYERS = [
 
 const KINDS = [
   { kind: 1, tag: "TGL", name: "切换开关", desc: "单击按键可开关持续触发" },
-  { kind: 2, tag: "MT", name: "按住/单击", desc: "区分点击与长按，分别触发不同功能" },
-  { kind: 3, tag: "DKS", name: "动态键程", desc: "按按压深度绑定 1~4 种功能" },
-  { kind: 4, tag: "SOCD", name: "瞬间释放", desc: "同时按两键时按预设快速触发" },
-  { kind: 5, tag: "MPT", name: "多点触控", desc: "一次按键触发三次不同输入" },
+  { kind: 2, tag: "MT", name: "按住/单击", desc: "点击与长按触发不同功能" },
+  { kind: 3, tag: "DKS", name: "动态键程", desc: "按深度触发 1~4 种功能" },
+  { kind: 4, tag: "SOCD", name: "瞬间释放", desc: "同按两键时快速触发" },
+  { kind: 5, tag: "MPT", name: "多点触控", desc: "一次按键触发三次输入" },
   { kind: 6, tag: "END", name: "终端跃迁", desc: "松开时触发另一个按键" },
-  { kind: 7, tag: "RS", name: "迅捷", desc: "同时按两键时触发按得更深的那个" },
+  { kind: 7, tag: "RS", name: "迅捷", desc: "触发按得更深的那个键" },
 ];
 
 const MAX_GROUPS: Record<number, number> = { 3: 4, 5: 3 };
@@ -167,7 +167,7 @@ function mmInput(v100: number, onChange: (v: number) => void): HTMLElement {
     min: "0",
     step: "0.05",
     style: "width:90px",
-    title: "毫米，内部 ×100 存储",
+    title: "毫米",
   });
   inp.onchange = () => {
     const v = Number(inp.value);
@@ -203,7 +203,7 @@ export async function renderAdvanced(page: HTMLElement): Promise<void> {
     el("h1", { text: "高级键" }),
     el("p", {
       class: "sub",
-      text: "七种高级触发功能（官方驱动线格式）。写入采用先删后写，写后读回；编码 hex 仅供排错。",
+      text: "为按键配置高级触发功能，如按住/单击、动态键程等。",
     }),
   );
 
@@ -407,7 +407,7 @@ export async function renderAdvanced(page: HTMLElement): Promise<void> {
         el("p", {
           class: "sub",
           style: "margin:8px 0 0",
-          text: "触发段为固件内部枚举，官方未公开语义，随意填写可能无效；留空 = 0。",
+          text: "一般留空 = 0。",
         }),
       );
     }

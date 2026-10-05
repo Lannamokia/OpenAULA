@@ -102,7 +102,7 @@ function cancelAllPaints(): void {
 
 // 绘制帧率读数：最近 FPS_WINDOW 次 rAF 回调间隔的滑动平均；只有文本变了才写 DOM。
 const FPS_WINDOW = 30;
-const FPS_IDLE = "绘制 —";
+const FPS_IDLE = "帧率 —";
 let testFpsOut: HTMLElement | null = null;
 /** 丢包计数读数（只在测试中显示）。 */
 let testDropOut: HTMLElement | null = null;
@@ -126,7 +126,7 @@ function tickFps(now: number): void {
   if (fpsDeltas.length < 2) return;
   let sum = 0;
   for (const d of fpsDeltas) sum += d;
-  setFpsText(`绘制 ${((fpsDeltas.length * 1000) / sum).toFixed(1)} fps`);
+  setFpsText(`帧率 ${((fpsDeltas.length * 1000) / sum).toFixed(1)} fps`);
 }
 
 function resetFps(): void {
@@ -176,7 +176,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     el("h1", { text: "触发设置" }),
     el("p", {
       class: "sub",
-      text: "磁轴键程（0x93/0x13）、快速触发 RT（0x99/0x19）、死区（0x96/0x16）、轴体（0x95/0x15）、校准（0x94）与行程测试（0x98）。前四类按 param = ELS(layer, system) = (layer & 3) | ((system & 7) << 2) 寻址，轴体与死区参数 param 恒为 0。单位由设备自报步进换算：step = travel_precision / 1000（本机 5 → 0.005mm），协议整数 = round(mm / step)，mm = 整数 × step；轴体 id 是原值不换算。",
+      text: "调整键程、灵敏度与死区，校准轴体，并实时查看按键行程。",
     }),
   );
 
@@ -277,7 +277,6 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     min: number,
     max: number,
     value: number,
-    protoNote: boolean,
   ): Slider {
     const input = el("input", {
       type: "range",
@@ -292,7 +291,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     });
     const sync = (): void => {
       const mm = Number(input.value);
-      out.textContent = `${mm.toFixed(fixed())} mm${protoNote ? `（协议 ${toProto(mm)}）` : ""}`;
+      out.textContent = `${mm.toFixed(fixed())} mm`;
     };
     input.oninput = sync;
     sync();
@@ -342,15 +341,6 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       };
       layerBar.append(b);
     }
-    const param = (layer & 3) | ((system & 7) << 2);
-    layerBar.append(
-      el("span", {
-        class: "mono",
-        style:
-          "align-self:center;margin-left:10px;color:var(--text-faint);font-size:12px",
-        text: `param = ${param} (0x${param.toString(16).padStart(2, "0").toUpperCase()})`,
-      }),
-    );
   }
 
   function renderCaps(): void {
@@ -362,7 +352,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
           "h2",
           {},
           "设备能力",
-          el("span", { class: "hint", text: "0x82/0x03 · 0x04 · 0x06 · 0x08" }),
+          el("span", { class: "hint", text: "只读" }),
         ),
         el("div", {
           class: "empty",
@@ -385,7 +375,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "设备能力",
-        el("span", { class: "hint", text: "0x82/0x03 · 0x04 · 0x06 · 0x08" }),
+        el("span", { class: "hint", text: "只读" }),
       ),
       el(
         "div",
@@ -394,13 +384,6 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         stat("最小 RT", `${rtMinMm().toFixed(fixed())} mm`),
         stat("磁轴", c.magnetic ? "是" : "否"),
         stat("支持轴体", `${c.switch_ids.length} 种`),
-        stat(
-          "高级键类型位图",
-          `0x${c.advanced_key_types.toString(16).padStart(2, "0").toUpperCase()}`,
-        ),
-      ),
-      hintLine(
-        `支持的开关 id：${c.switch_ids.length > 0 ? c.switch_ids.join(", ") : "（位图为空）"}　·　位图 ${c.supported_switches || "—"}`,
       ),
     );
     if (!c.magnetic) {
@@ -489,10 +472,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "选择键位",
-        el("span", {
-          class: "hint",
-          text: "点击选中 / 取消，可多选；键面下方是已读到的当前轴体",
-        }),
+        el("span", { class: "hint", text: "点键多选" }),
       ),
       el("div", { class: "kb-wrap" }, kb),
       el(
@@ -652,7 +632,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "选择轴体",
-        el("span", { class: "hint", text: "0x95/0x00 读 · 0x15/0x00 写" }),
+        el("span", { class: "hint", text: "应用到选中键" }),
       ),
       el(
         "div",
@@ -662,8 +642,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       ),
       hintLine(
         allowed.length === 0
-          ? "设备位图（0x82/0x03）为空，没有可选轴体。"
-          : `下拉项 = 本地轴体表 ∩ 设备位图，共 ${allowed.length} 项。`,
+          ? "设备未报告可用轴体。"
+          : `共 ${allowed.length} 种可选轴体。`,
       ),
       el("div", { style: "margin-top:12px" }, table),
     );
@@ -693,17 +673,12 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "行程测试",
-        el("span", {
-          class: "hint",
-          text: `0x98/0x01 按选中键起流（>28 键退回监测全部）· 每 ${MON_REARM_MS}ms 重发一次 · 后台读线程全速收包入队，界面每个显示帧绘制一次`,
-        }),
+        el("span", { class: "hint", text: "实时显示按键行程" }),
         fps,
         drop,
         toggle,
       ),
-      hintLine(
-        "打开后设备持续上报每个键的当前行程；取包全速（每轮都是非阻塞取走已排队报文），进度条按屏幕刷新率重绘，标题里的读数就是实测绘制帧率。进度条分母取该键的行程设置，没读到就退回其轴体的最大行程。离开本页或重进本页都会停掉监测流。",
-      ),
+      hintLine("按下按键即可看到实时行程。"),
       box,
     );
   }
@@ -898,7 +873,6 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       MIN_TRAVEL_MM,
       maxMm,
       curMm,
-      true,
     );
     const apply = el("button", {
       class: "btn primary",
@@ -931,7 +905,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "单键行程",
-        el("span", { class: "hint", text: `0x93/${(layer & 3) | ((system & 7) << 2)} 读 · 0x13 写` }),
+        el("span", { class: "hint", text: "应用到选中键" }),
       ),
       el(
         "div",
@@ -941,7 +915,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         el("span", {
           class: "mono",
           style: "align-self:center;color:var(--text-dim)",
-          text: `读回：${curMm.toFixed(fixed())} mm（协议 ${proto}）· 将应用到 ${ids.length} 个键（以 ${keyName(first)} 的值为初值）`,
+          text: `读回：${curMm.toFixed(fixed())} mm · 将应用到 ${ids.length} 个键`,
         }),
       ),
     );
@@ -972,8 +946,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       MIN_TRAVEL_MM,
     );
 
-    const press = mmSlider("按下灵敏度", minMm, maxMm, curPress, true);
-    const release = mmSlider("抬起灵敏度", minMm, maxMm, curRelease, true);
+    const press = mmSlider("按下灵敏度", minMm, maxMm, curPress);
+    const release = mmSlider("抬起灵敏度", minMm, maxMm, curRelease);
     press.input.disabled = !on;
     release.input.disabled = !on;
     press.input.oninput = () => {
@@ -1068,7 +1042,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "快速触发 RT",
-        el("span", { class: "hint", text: "0x99 读 · 0x19 写" }),
+        el("span", { class: "hint", text: "按下与抬起灵敏度" }),
         power,
       ),
       el(
@@ -1086,8 +1060,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       ),
       hintLine(
         on
-          ? `已开启；灵敏度最小 ${minMm.toFixed(fixed())} mm（设备的最小 RT 值）。`
-          : "RT 总开关为关时灵敏度滑杆置灰；先开总开关再调灵敏度。",
+          ? `已开启；最小灵敏度 ${minMm.toFixed(fixed())} mm。`
+          : "先开启总开关再调灵敏度。",
       ),
     );
   }
@@ -1114,14 +1088,12 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       0,
       MAX_DEAD_ZONE_MM,
       topMm,
-      true,
     );
     const bottom = mmSlider(
       `底部死区（0 .. ${MAX_DEAD_ZONE_MM} mm）`,
       0,
       MAX_DEAD_ZONE_MM,
       botMm,
-      true,
     );
 
     const power = el("button", { class: "btn" });
@@ -1171,11 +1143,11 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "高级设置 · 死区",
-        el("span", { class: "hint", text: "0x96/0x00 读 · 0x16/0x00 写" }),
+        el("span", { class: "hint", text: "应用到选中键" }),
       ),
       el("div", { class: "row" }, top.field, bottom.field, power, apply),
       hintLine(
-        `顶部 / 底部死区就是 0x16 的 top / bottom（不是鼠标那套 dead switch）；读回：顶部 ${topMm.toFixed(fixed())} / 底部 ${botMm.toFixed(fixed())} mm，${cur && cur.enable !== 0 ? "已启用" : "未启用"}。`,
+        `读回：顶部 ${topMm.toFixed(fixed())} / 底部 ${botMm.toFixed(fixed())} mm，${cur && cur.enable !== 0 ? "已启用" : "未启用"}。`,
       ),
     );
   }
@@ -1223,13 +1195,11 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         "h2",
         {},
         "轴体校准",
-        el("span", { class: "hint", text: "0x94/0x00 起 · 0x94/0x04 停" }),
+        el("span", { class: "hint", text: "逐个按键到底完成校准" }),
         fps,
         toggle,
       ),
-      hintLine(
-        `开始后每 ${CAL_REPLAY_MS / 1000}s 重发一次启动命令（SDK 同样做）；取包是非阻塞取走读线程已排队的报文、取完立刻再来一轮（全速、不丢包），绘制与取包解耦、每个显示帧只画一次，标题里的读数即实际绘制帧率。进度 = (adMax − ad) / (adMax − adMin)，adMax/adMin 来自 0x94/0x05。设备用记录的 bit15 标记「该键校准完成」——完成的键会染成高亮色（键盘本身不会亮灯，进度只在界面上）。`,
-      ),
+      hintLine("按键按到底完成校准，完成的键会高亮。"),
       box,
     );
     paintCal();

@@ -6,7 +6,7 @@ export async function renderDevices(page: HTMLElement): Promise<void> {
     el("h1", { text: "设备" }),
     el("p", {
       class: "sub",
-      text: "枚举 AULA 配置接口（usage_page 0xFF60 / usage 0x61）。WebHID 与本程序可同时打开同一接口。",
+      text: "列出键盘的配置接口，选择后打开连接。",
     }),
   );
 
@@ -54,8 +54,8 @@ export async function renderDevices(page: HTMLElement): Promise<void> {
         { class: "name" },
         d.product ?? "AULA 设备",
         d.framed
-          ? el("span", { class: "badge wireless", text: "8K 无线 · 分帧" })
-          : el("span", { class: "badge", text: "整包直发" }),
+          ? el("span", { class: "badge wireless", text: "8K 无线" })
+          : el("span", { class: "badge", text: "有线" }),
       );
       listBody.append(
         el(
@@ -69,7 +69,7 @@ export async function renderDevices(page: HTMLElement): Promise<void> {
               "span",
               {
                 class: "ids",
-                text: `VID 0x${toHex(d.vendor_id, 4)} · PID 0x${toHex(d.product_id, 4)} · usage_page 0x${toHex(d.usage_page, 4)} · usage 0x${toHex(d.usage)}`,
+                text: `VID 0x${toHex(d.vendor_id, 4)} · PID 0x${toHex(d.product_id, 4)}`,
               },
             ),
           ),
