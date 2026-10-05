@@ -208,6 +208,8 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
   /** 连续读取失败次数：单拍失败很正常，连续失败才说明设备休眠/掉线。 */
   let failRun = 0;
   let calFailRun = 0;
+/** 无线链路下设备不回报校准进度（实测），只能触发校准让用户看键盘。 */
+let linkFramed = false;
   let testBarBox: HTMLElement | null = null;
   let testBarSig = "";
   const live = new Map<number, { mm: number; press: boolean; at: number }>();
@@ -1208,6 +1210,15 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
 
   // --- 轴体校准（0x94/0x00 起 · 0x94/0x04 停 · 0x94/param=2 上报）-------------
 
+  /** 读一次链路。校准进度只有有线才回报，这决定校准卡片长什么样。 */
+  async function refreshLink(): Promise<void> {
+    try {
+      linkFramed = (await api.deviceStatus()).framed;
+    } catch {
+      /* 读不到就按有线处理，最坏情况是模型一直空着 */
+    }
+  }
+
   function renderCal(): void {
     const ids = selIds();
     const toggle = el("button", {
@@ -1221,6 +1232,20 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
     };
     const box = el("div", { style: "margin-top:10px" });
     calKeys.clear();
+    if (linkFramed) {
+      // 无线不回报进度：只提供起停，进度靠用户看键盘上的灯。
+      box.append(
+        el("div", {
+          class: "empty",
+          text: "无线连接下设备不上报校准进度，这里不会有进度显示。点「开始」后请逐个按键按到底，校准完成的键在键盘上会变绿；全部按完后点「停止」。",
+        }),
+      );
+      calCard.replaceChildren(
+        el("h2", {}, "轴体校准", el("span", { class: "hint", text: "无线连接：看键盘灯" }), toggle),
+        box,
+      );
+      return;
+    }
     // 像网页那样用标准键位模型展示：每键显示实时数值，校准完成的键染绿。
     const kb = el("div", { class: "kb" });
     kb.style.width = `${930 * SCALE}px`;
@@ -1315,7 +1340,7 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
         /* 单次重发失败不打断校准 */
       });
     }, CAL_REPLAY_MS);
-    calPollTimer = window.setTimeout(() => void pollCal(), 0);
+    if (!linkFramed) calPollTimer = window.setTimeout(() => void pollCal(), 0);
   }
   function stopCal(): void {
     if (calPollTimer) {
@@ -1368,9 +1393,10 @@ export async function renderTrigger(page: HTMLElement): Promise<void> {
       calBusy = false;
     }
     // 与行程测试同样：非阻塞取走读线程已排队的报文，取完立刻排下一轮；绘制由 rAF 另行合并。
-    if (calOn) calPollTimer = window.setTimeout(() => void pollCal(), 0);
+    if (calOn && !linkFramed) calPollTimer = window.setTimeout(() => void pollCal(), 0);
   }
 
+  await refreshLink();
   renderTabs();
   renderKb();
   renderAxis();
