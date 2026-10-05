@@ -48,7 +48,11 @@ const FRAME_GAP: Duration = Duration::from_millis(1);
 /// not a cost: the loop leaves as soon as all five have been acknowledged, which
 /// is what keeps a full-frame RGB write at tens of milliseconds instead of the
 /// 4.5s (3 attempts × 1.5s) a reply-waiting write used to burn.
-const COMMAND_ACK_WINDOW: Duration = Duration::from_millis(80);
+/// Worst-case wait for the device's 5 link-layer ACKs after a write. The loop
+/// exits as soon as all five arrive (typically ~15-20ms), so this only bounds
+/// the pathological case - measured writes land at 50-60ms per frame including
+/// the fragments themselves.
+const COMMAND_ACK_WINDOW: Duration = Duration::from_millis(40);
 /// Read slice inside the ACK window.
 const ACK_POLL_MS: i32 = 10;
 /// Idle tick of the reader thread. `read_timeout` only waits this long when the

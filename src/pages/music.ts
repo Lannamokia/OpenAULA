@@ -330,11 +330,6 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       // 读不到就保持上一次的结果；为 null 时按最保守的无线速率跑。
     }
     renderStatus();
-    // 无线下不允许音乐律动：若正在跑就停掉。
-    if (wireless() && st.running) {
-      await stopStream();
-      showError("已切到无线连接，音乐律动不支持无线，已自动停止。");
-    }
     renderControls();
     // 链路变了，生效速率跟着变，定时器要重挂。
     if (st.running) startTimers();
