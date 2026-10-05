@@ -92,6 +92,11 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     sendMs: 0,
   });
 
+  const wirelessNote = el("div", {
+    class: "empty",
+    text: "无线接收器的 HID 带宽不足以承载音乐律动所需的刷新率，这一项已禁用。改用有线连接即可使用；下方的 Windows 主题色同步不受影响。",
+  });
+  wirelessNote.hidden = true;
   const startBtn = el("button", { class: "btn primary", text: "启动" });
   const stopBtn = el("button", { class: "btn danger", text: "停止" });
   const syncBtn = el("button", { class: "btn", text: "同步 Windows 主题色" });
@@ -166,11 +171,17 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     errBox.style.display = msg ? "" : "none";
   }
 
+  /** 无线链路的 HID 带宽扛不住音乐律动所需的刷新率，直接禁用这一项。 */
+  const wireless = (): boolean => st.link === "wireless";
+
   function renderControls(): void {
-    startBtn.disabled = st.running;
+    const off = wireless();
+    startBtn.disabled = st.running || off;
     stopBtn.disabled = !st.running;
-    // 频段数改了要重建 FFT 分析器，运行时先禁止改动。
-    bandIn.disabled = st.running;
+    bandIn.disabled = st.running || off;
+    if (off && !st.running) startBtn.textContent = "无线连接下不可用";
+    else startBtn.textContent = "启动";
+    wirelessNote.hidden = !off;
   }
 
   function renderStatus(): void {
@@ -300,6 +311,12 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       // 读不到就保持上一次的结果；为 null 时按最保守的无线速率跑。
     }
     renderStatus();
+    // 无线下不允许音乐律动：若正在跑就停掉。
+    if (wireless() && st.running) {
+      await stopStream();
+      showError("已切到无线连接，音乐律动不支持无线，已自动停止。");
+    }
+    renderControls();
     // 链路变了，生效速率跟着变，定时器要重挂。
     if (st.running) startTimers();
   }
@@ -416,6 +433,7 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
       { class: "card" },
       el("h2", { text: "控制" }, el("span", { class: "hint", text: "随系统声音变化" })),
       el("div", { class: "row" }, startBtn, stopBtn),
+      wirelessNote,
       el(
         "div",
         { class: "row", style: "margin-top:10px" },
