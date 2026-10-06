@@ -15,9 +15,9 @@
 
 #define AppName "OpenAULA"
 ; 显示用版本：可以带 -dev.<hash> 这类预发布后缀，由 tools/stamp-version.mjs 注入
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 ; PE 资源版本：必须是 4 段纯数字，Inno 的 VersionInfoVersion 不接受预发布后缀
-#define AppVersionNumeric "1.0.0.0"
+#define AppVersionNumeric "1.1.0.0"
 #define AppExe "openaula.exe"
 #define SourceExe "..\src-tauri\target\release\openaula.exe"
 

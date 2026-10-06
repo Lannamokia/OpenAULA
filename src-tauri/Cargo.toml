@@ -1,6 +1,6 @@
 [package]
 name = "openaula"
-version = "1.0.0"
+version = "1.1.0"
 description = "Unofficial AULA keyboard driver (HERO 68 XS), protocol ported from spiderdriver"
 authors = ["spiderdriver"]
 edition = "2021"
