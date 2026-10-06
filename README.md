@@ -55,6 +55,22 @@ cargo run --example probe        # ★ 只读真机探测，不写任何东西
 `probe` 会打印：接口列表、UUID、固件、电量、三套配置名、一条键位、宏区、高级键、四个灯区、
 触发能力与各项当前值、整机开关。**怀疑设备状态时先跑它。**
 
+### CI
+
+- **推到任意分支**：跑单元测试 → 编译 release 二进制 → 用 Inno Setup 打安装包。产物名带**提交短哈希**
+  （`OpenAULA-1.0.0-dev.<hash>`），在 Actions 的 artifact 里下载。
+- **打 `v1.2.3` 这样的 tag**：同一套流程，版本号用 tag，并自动建一个 GitHub Release 附上安装包。
+- **版本号由 `tools/stamp-version.mjs` 统一注入**六处：`package.json`、`package-lock.json`、
+  `src-tauri/Cargo.toml`、`src-tauri/Cargo.lock`、`src-tauri/tauri.conf.json`、`installer/openaula.iss`。
+  所以**手工改版本号对 CI 构建没有意义，会被 git 覆盖**。本地想指定版本：
+
+  ```bash
+  node tools/stamp-version.mjs --mode release --tag v1.2.3   # 或 --mode dev --hash <sha> --build <n>
+  ```
+
+  （`installer/openaula.iss` 里有两个版本定义：`AppVersion` 可以带 `-dev.<hash>` 这类后缀，
+  `AppVersionNumeric` 必须是 4 段纯数字——Inno 的 `VersionInfoVersion` 不接受预发布后缀。）
+
 ## 架构
 
 ```
