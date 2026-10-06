@@ -126,7 +126,7 @@ cargo run --example probe        # ★ 只读真机探测，不写任何东西
 - `docs/commands.md` —— 每条命令；灯光、宏、高级键、磁轴触发、事件、无线裸报文、legacy `AA` 族
 - `docs/keycodes.md` —— 键码表、组合键编码、Fn 层功能键
 
-协议由反混淆官方网页驱动 + 真机报文对照还原而来。**读代码前建议先读 `NEXT.md`**，
+协议由反混淆官方网页驱动 + 真机报文对照还原而来。**读代码前建议先读 `DEVNOTES.md`**，
 里面记着踩过的坑与实测结论（不少结论与直觉相反，例如：
 
 - `0x98/0x01` 不是"流"而是**一次快照**，重发频率就是采样率；
@@ -156,7 +156,7 @@ cargo run --example probe        # ★ 只读真机探测，不写任何东西
 
 - 任何写操作按「**读原值 → 写 → 读回校验 → 还原**」做；写宏区**必须先整段读**（设备会把写入长度之外置 `0xff`）。
 - 新增 `#[tauri::command]` **必须同时在 `src-tauri/src/main.rs` 的 `generate_handler!` 里注册**，
-  否则前端只会得到一句 `Command xxx not found`。自查脚本见 `NEXT.md`。
+  否则前端只会得到一句 `Command xxx not found`。自查脚本见 `DEVNOTES.md`。
 - 面向用户的文案不写协议细节与实现内幕（有「原始命令」页专门给排错用）。
 
 ## 致谢与来源

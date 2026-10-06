@@ -346,7 +346,7 @@ SDK 另有 `*ByWireless` 系列：直接 `sendReport(9, 19字节)`，格式
 >
 > 驱动项目 `openaula/` 的「神光同步」在无线下走这条快通道、有线走 `0x08/1`（`updateRGB`）：
 > Rust 侧只做 WASAPI 回环采集 + FFT + 频段→键帧，前端按刷新率拉帧再下发。
-> 架构与实测数据见 `openaula/NEXT.md`。
+> 架构与实测数据见 `openaula/DEVNOTES.md`。
 
 ### 4.6 另一套灯光服务（老/侧信道，非本机型走法）
 
