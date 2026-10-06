@@ -1,0 +1,62 @@
+name: release
+
+# A `v1.2.3` tag builds the release installer with that version and publishes it
+# as a GitHub Release. Anything the tag cannot give a clean x.y.z version is
+# rejected by the stamping script rather than shipped.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # gh release create
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Stamp the version
+        id: ver
+        shell: pwsh
+        run: node tools/stamp-version.mjs --mode release --tag "${{ github.ref_name }}"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      - name: Build the release binary
+        run: npx tauri build --no-bundle
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
+          & $iscc "installer\openaula.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
+          Get-ChildItem installer-out | Format-Table Name, Length
+
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $name = "OpenAULA-${{ steps.ver.outputs.display }}-setup.exe"
+          gh release create "${{ github.ref_name }}" "installer-out/$name" `
+            --title "OpenAULA ${{ steps.ver.outputs.display }}" `
+            --generate-notes

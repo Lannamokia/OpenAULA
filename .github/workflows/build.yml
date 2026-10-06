@@ -1,0 +1,69 @@
+name: build
+
+# Every push to a branch produces a runnable installer whose version carries the
+# short commit hash, so any artifact can be traced back to a commit.
+# Tag pushes are handled by release.yml - a `branches` filter never matches a tag.
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Stamps package.json / package-lock.json / Cargo.toml / tauri.conf.json /
+      # openaula.iss and publishes display+numeric as step outputs. Tauri rejects
+      # a bare hash as a version, hence the 1.0.0-dev.<hash> shape; Inno rejects a
+      # prerelease in VersionInfoVersion, hence the separate numeric one.
+      - name: Stamp the version
+        id: ver
+        shell: pwsh
+        run: |
+          $hash = "${{ github.sha }}".Substring(0, 7)
+          node tools/stamp-version.mjs --mode dev --hash $hash --build ${{ github.run_number }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      # --no-bundle: Tauri's own NSIS/WiX bundlers download their toolchain, and
+      # this project ships the Inno Setup wrapper below instead.
+      - name: Build the release binary
+        run: npx tauri build --no-bundle
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
+          & $iscc "installer\openaula.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
+          Get-ChildItem installer-out | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenAULA-${{ steps.ver.outputs.display }}
+          if-no-files-found: error
+          path: |
+            installer-out/*.exe
+            src-tauri/target/release/openaula.exe

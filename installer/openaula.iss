@@ -14,7 +14,10 @@
 ; 1803+ and Windows 11 ship it, so it is not bundled here.
 
 #define AppName "OpenAULA"
+; 显示用版本：可以带 -dev.<hash> 这类预发布后缀，由 tools/stamp-version.mjs 注入
 #define AppVersion "1.0.0"
+; PE 资源版本：必须是 4 段纯数字，Inno 的 VersionInfoVersion 不接受预发布后缀
+#define AppVersionNumeric "1.0.0.0"
 #define AppExe "openaula.exe"
 #define SourceExe "..\src-tauri\target\release\openaula.exe"
 
@@ -23,7 +26,7 @@ AppId={{7E2C4B1A-9D3F-4A6E-8B51-2F0C7A4E1D93}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppVersionNumeric}
 AppPublisher={#AppName}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
