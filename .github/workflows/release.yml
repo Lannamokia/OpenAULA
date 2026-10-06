@@ -26,19 +26,23 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # On a manual run the workflow definition comes from the default branch but
-      # the code should come from the tag, which is what is being released.
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
-
+      # Before the checkout: a manual run naming a tag that does not exist should
+      # say so, not fail three times inside a git fetch.
       - name: Resolve the tag
         id: tag
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
           if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw "tag must look like v1.2.3, got '$tag'" }
+          gh api "repos/${{ github.repository }}/git/ref/tags/$tag" --silent
+          if ($LASTEXITCODE -ne 0) { throw "tag $tag does not exist on the remote" }
           "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
