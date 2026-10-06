@@ -241,12 +241,13 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     stopBtn.disabled = !st.running;
     bandIn.disabled = st.running;
     startBtn.textContent = "启动";
-    // 无线下"逐帧推直控颜色"必然出现整块键盘的杂色/白色闪烁，实测**与帧率无关**
-    // （50~500 报文/秒每一档都发生），标准通道与无线快通道**都**会，有线不会。
-    // 所以只留这一句建议，不再提回报率之类的"调一调就好"。
+    // 无线下逐帧推直控颜色**可能**出现整块键盘的杂色/白色闪烁，根因是 2.4G 链路余量：
+    // 净室与"接收器离键盘 30cm 内无遮挡"时实测正常，拉开距离或有干扰才出现，
+    // 且与帧率、下发通道都无关。所以给的是"靠近接收器 / 改有线"，而不是调参数。
     wirelessNote.hidden = !off;
     if (off) {
-      wirelessNote.textContent = "无线连接下音乐律动会出现杂色闪烁，建议切换到有线连接使用。";
+      wirelessNote.textContent =
+        "无线连接下音乐律动可能出现杂色闪烁，与 2.4G 电磁环境和接收器距离有关（30cm 内无遮挡时正常）。遇到闪烁请把接收器挪近，或改用有线连接。";
     }
   }
 
@@ -427,11 +428,11 @@ export async function renderMusic(page: HTMLElement): Promise<void> {
     const task = beginLoading("正在启动神光同步…");
     try {
       await refreshLink();
-      // 无线下推"逐键直控颜色"必然出现整块键盘的杂色/白闪，**与帧率、下发通道都无关**
-      // （有线完全正常；厂商自己的驱动也只有有线版音乐律动）。拦一道，用户坚持要用也放行。
+      // 无线下推逐键颜色**可能**出现整块杂色/白闪，根因是 2.4G 链路余量（净室与近距离实测正常）。
+      // 拦一道说明触发条件与应对，用户坚持要用也放行。
       const wirelessWarn =
-        "使用无线连接打开音乐律动会导致键盘出现随机周期的杂色闪烁。\n\n" +
-        "如果确实有使用这个功能的需求，请切换至有线模式进行连接。\n\n" +
+        "无线连接下音乐律动可能出现随机周期的杂色闪烁，与 2.4G 电磁环境和接收器距离有关。\n\n" +
+        "接收器与键盘距离 30cm 内、无遮挡时实测正常；遇到闪烁请把接收器挪近，或改用有线连接。\n\n" +
         "仍要启动吗？";
       if (wireless() && !window.confirm(wirelessWarn)) {
         st.running = false;
