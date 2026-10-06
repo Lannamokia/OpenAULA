@@ -3,19 +3,42 @@ name: release
 # A `v1.2.3` tag builds the release installer with that version and publishes it
 # as a GitHub Release. Anything the tag cannot give a clean x.y.z version is
 # rejected by the stamping script rather than shipped.
+#
+# Also runnable by hand (Actions -> release -> Run workflow) so a tag whose run
+# failed can be republished without moving the tag. That is the usual case when
+# the release was created first in the web UI: the tag push then arrives with the
+# release already present, and `gh release create` refuses to touch it.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build and publish, e.g. v1.0.1
+        required: true
+        type: string
 
 permissions:
-  contents: write # gh release create
+  contents: write # create the release, upload its asset
 
 jobs:
   release:
     runs-on: windows-latest
 
     steps:
+      # On a manual run the workflow definition comes from the default branch but
+      # the code should come from the tag, which is what is being released.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Resolve the tag
+        id: tag
+        shell: pwsh
+        run: |
+          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw "tag must look like v1.2.3, got '$tag'" }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
 
       - uses: actions/setup-node@v4
         with:
@@ -25,7 +48,7 @@ jobs:
       - name: Stamp the version
         id: ver
         shell: pwsh
-        run: node tools/stamp-version.mjs --mode release --tag "${{ github.ref_name }}"
+        run: node tools/stamp-version.mjs --mode release --tag "${{ steps.tag.outputs.tag }}"
 
       - uses: dtolnay/rust-toolchain@stable
 
@@ -51,12 +74,33 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
           Get-ChildItem installer-out | Format-Table Name, Length
 
+      # Uploaded before publishing, so a publishing failure still leaves the
+      # installer downloadable instead of only existing on a lost runner.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenAULA-${{ steps.ver.outputs.display }}
+          if-no-files-found: error
+          path: |
+            installer-out/*.exe
+            src-tauri/target/release/openaula.exe
+
       - name: Publish the release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $name = "OpenAULA-${{ steps.ver.outputs.display }}-setup.exe"
-          gh release create "${{ github.ref_name }}" "installer-out/$name" `
-            --title "OpenAULA ${{ steps.ver.outputs.display }}" `
-            --generate-notes
+          $tag  = "${{ steps.tag.outputs.tag }}"
+          $file = "installer-out/OpenAULA-${{ steps.ver.outputs.display }}-setup.exe"
+          if (-not (Test-Path $file)) { throw "installer not found: $file" }
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "release $tag already exists - uploading the installer into it"
+            gh release upload $tag $file --clobber
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload failed" }
+          } else {
+            gh release create $tag $file --title "OpenAULA ${{ steps.ver.outputs.display }}" --generate-notes
+            if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
+          }
+
+          gh release view $tag --json url,assets --jq '"\(.url)  附件 \(.assets | length) 个"'
